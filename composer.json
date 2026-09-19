@@ -1,0 +1,62 @@
+{
+    "name": "sanmai/typesafe-ai-php",
+    "description": "TypeSafe AI API PHP SDK",
+    "license": "Apache-2.0",
+    "type": "library",
+    "keywords": [
+        "SDK",
+        "TypeSafe",
+        "AI"
+    ],
+    "authors": [
+        {
+            "name": "Alexey Kopytko",
+            "email": "alexey@kopytko.com"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/sanmai/typesafe-ai-php/issues"
+    },
+    "require": {
+        "php": "^8.2",
+        "ext-json": "*",
+        "caseyamcl/guzzle_retry_middleware": "^2.9",
+        "guzzlehttp/guzzle": "^6.3 || ^7.0",
+        "jms/serializer": "^3.29",
+        "psr/log": "^1.1 || ^2 || ^3",
+        "sanmai/json-serializer": "^0.2.5"
+    },
+    "require-dev": {
+        "ergebnis/composer-normalize": ">=2.23",
+        "esi/phpunit-coverage-check": ">2",
+        "friendsofphp/php-cs-fixer": "^3",
+        "infection/infection": "^0.31",
+        "php-coveralls/php-coveralls": "^2.4",
+        "phpstan/phpstan": ">=0.10",
+        "phpunit/phpunit": "^9.3",
+        "sanmai/pipeline": ">=6.11"
+    },
+    "suggest": {
+        "doctrine/cache": "For metadata caching",
+        "monolog/monolog": "For advanced logging and debugging"
+    },
+    "autoload": {
+        "psr-4": {
+            "TypeSafeAI\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\TypeSafeAI\\": "tests/"
+        }
+    },
+    "config": {
+        "allow-plugins": true,
+        "sort-packages": true
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}
