@@ -32,8 +32,10 @@
         "friendsofphp/php-cs-fixer": "^3",
         "infection/infection": "^0.31",
         "php-coveralls/php-coveralls": "^2.4",
+        "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": ">=0.10",
         "phpunit/phpunit": "^9.3",
+        "sanmai/phpstan-rules": "^0.3.14",
         "sanmai/pipeline": ">=6.11"
     },
     "suggest": {
