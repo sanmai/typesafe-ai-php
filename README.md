@@ -42,13 +42,22 @@ There are three question types:
 use TypeSafeAI\EvaluationRequest;
 
 $request = EvaluationRequest::build('Help! My payouts have been failing for 3 days.')
-    ->noul('is_urgent', 'Does this convey urgency?', true: 'Explicitly time-sensitive', false: 'No urgency expressed')
+    ->noul(
+        'is_urgent',
+        'Does this convey urgency?',
+        true: 'Explicitly time-sensitive',
+        false: 'No urgency expressed',
+    )
     ->choice('department', 'Which team should handle this?', [
         'billing' => 'Payments, invoicing, refunds',
         'technical' => 'Bugs, outages, integrations',
         'sales' => null,
     ])
-    ->score('frustration', 'How frustrated is the customer?', ['Calm', 'Frustrated', 'Very angry']);
+    ->score('frustration', 'How frustrated is the customer?', [
+        'Calm',
+        'Frustrated',
+        'Very angry',
+    ]);
 
 $response = $client->evaluate($request);
 ```
@@ -62,7 +71,10 @@ use TypeSafeAI\Question\Noul;
 use TypeSafeAI\Question\NoulCriteria;
 
 $request = new EvaluationRequest($state, questions: [
-    'is_urgent' => new Noul('Does this convey urgency?', new NoulCriteria(false: 'No urgency expressed')),
+    'is_urgent' => new Noul(
+        'Does this convey urgency?',
+        new NoulCriteria(false: 'No urgency expressed'),
+    ),
 ]);
 ```
 
@@ -123,7 +135,8 @@ use GuzzleHttp\Exception\ClientException;
 try {
     $response = $client->evaluate($request);
 } catch (ClientException $e) {
-    echo "Request failed (HTTP {$e->getResponse()->getStatusCode()}): {$e->getResponse()->getBody()}\n";
+    $error = $e->getResponse();
+    echo "Request failed (HTTP {$error->getStatusCode()}): {$error->getBody()}\n";
 }
 ```
 
