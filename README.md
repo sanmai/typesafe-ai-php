@@ -42,13 +42,22 @@ There are three question types:
 use TypeSafeAI\EvaluationRequest;
 
 $request = EvaluationRequest::build('Help! My payouts have been failing for 3 days.')
-    ->noul('is_urgent', 'Does this convey urgency?', true: 'Explicitly time-sensitive', false: 'No urgency expressed')
+    ->noul(
+        'is_urgent',
+        'Does this convey urgency?',
+        true: 'Explicitly time-sensitive',
+        false: 'No urgency expressed',
+    )
     ->choice('department', 'Which team should handle this?', [
         'billing' => 'Payments, invoicing, refunds',
         'technical' => 'Bugs, outages, integrations',
         'sales' => null,
     ])
-    ->score('frustration', 'How frustrated is the customer?', ['Calm', 'Frustrated', 'Very angry']);
+    ->score('frustration', 'How frustrated is the customer?', [
+        'Calm',
+        'Frustrated',
+        'Very angry',
+    ]);
 
 $response = $client->evaluate($request);
 ```
@@ -62,7 +71,10 @@ use TypeSafeAI\Question\Noul;
 use TypeSafeAI\Question\NoulCriteria;
 
 $request = new EvaluationRequest($state, questions: [
-    'is_urgent' => new Noul('Does this convey urgency?', new NoulCriteria(false: 'No urgency expressed')),
+    'is_urgent' => new Noul(
+        'Does this convey urgency?',
+        new NoulCriteria(false: 'No urgency expressed'),
+    ),
 ]);
 ```
 
@@ -71,21 +83,22 @@ $request = new EvaluationRequest($state, questions: [
 Each answer type has its own accessor, so static analysis knows which fields are available:
 
 ```php
-$response->noul('is_urgent')->noul;                  // 0.95
+$urgent = $response->noul('is_urgent');
+$urgent->noul;                   // 0.95
 
 $department = $response->choice('department');
-$department->choice;                                 // 'billing'
-$department->probabilities;                          // ['sales' => 0.0, 'technical' => 0.11, 'billing' => 0.89]
-$department->confidence;                             // 0.82
+$department->choice;             // 'billing'
+$department->probabilities;      // ['sales' => 0.0, 'technical' => 0.11, 'billing' => 0.89]
+$department->confidence;         // 0.82
 
 $frustration = $response->score('frustration');
-$frustration->score;                                 // 1.04
-$frustration->legend;                                // [0 => 'Calm', 1 => 'Frustrated', 2 => 'Very angry']
-$frustration->probabilities;                         // [0 => 0.0, 1 => 0.96, 2 => 0.04]
-$frustration->confidence;                            // 0.94
+$frustration->score;             // 1.04
+$frustration->legend;            // [0 => 'Calm', 1 => 'Frustrated', 2 => 'Very angry']
+$frustration->probabilities;     // [0 => 0.0, 1 => 0.96, 2 => 0.04]
+$frustration->confidence;        // 0.94
 
-$response->model;                                    // 'jev-N.NN', the actual model version
-$response->usage->input_tokens;                      // 414
+$response->model;                // 'jev-N.NN', the actual model version
+$response->usage->input_tokens;  // 414
 ```
 
 The score is the mean of the level numbers, weighted by their probabilities: here 0.96 × 1 + 0.04 × 2 = 1.04. Thus it can land between levels. The probabilities come in the order that the API gives, which can be different from the order of your options or levels.
@@ -122,7 +135,8 @@ use GuzzleHttp\Exception\ClientException;
 try {
     $response = $client->evaluate($request);
 } catch (ClientException $e) {
-    echo "Request failed (HTTP {$e->getResponse()->getStatusCode()}): {$e->getResponse()->getBody()}\n";
+    $error = $e->getResponse();
+    echo "Request failed (HTTP {$error->getStatusCode()}): {$error->getBody()}\n";
 }
 ```
 
