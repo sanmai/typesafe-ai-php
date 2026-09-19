@@ -71,21 +71,22 @@ $request = new EvaluationRequest($state, questions: [
 Each answer type has its own accessor, so static analysis knows which fields are available:
 
 ```php
-$response->noul('is_urgent')->noul;                  // 0.95
+$urgent = $response->noul('is_urgent');
+$urgent->noul;                   // 0.95
 
 $department = $response->choice('department');
-$department->choice;                                 // 'billing'
-$department->probabilities;                          // ['sales' => 0.0, 'technical' => 0.11, 'billing' => 0.89]
-$department->confidence;                             // 0.82
+$department->choice;             // 'billing'
+$department->probabilities;      // ['sales' => 0.0, 'technical' => 0.11, 'billing' => 0.89]
+$department->confidence;         // 0.82
 
 $frustration = $response->score('frustration');
-$frustration->score;                                 // 1.04
-$frustration->legend;                                // [0 => 'Calm', 1 => 'Frustrated', 2 => 'Very angry']
-$frustration->probabilities;                         // [0 => 0.0, 1 => 0.96, 2 => 0.04]
-$frustration->confidence;                            // 0.94
+$frustration->score;             // 1.04
+$frustration->legend;            // [0 => 'Calm', 1 => 'Frustrated', 2 => 'Very angry']
+$frustration->probabilities;     // [0 => 0.0, 1 => 0.96, 2 => 0.04]
+$frustration->confidence;        // 0.94
 
-$response->model;                                    // 'jev-N.NN', the actual model version
-$response->usage->input_tokens;                      // 414
+$response->model;                // 'jev-N.NN', the actual model version
+$response->usage->input_tokens;  // 414
 ```
 
 The score is the mean of the level numbers, weighted by their probabilities: here 0.96 × 1 + 0.04 × 2 = 1.04. Thus it can land between levels. The probabilities come in the order that the API gives, which can be different from the order of your options or levels.
