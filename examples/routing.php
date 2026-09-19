@@ -26,7 +26,7 @@ declare(strict_types=1);
 use TypeSafeAI\EvaluationRequest;
 use TypeSafeAI\TypeSafeClient;
 
-require __DIR__ . '/../vendor/autoload.php';
+require 'vendor/autoload.php';
 
 $client = TypeSafeClient::createInstance(getenv('TYPESAFE_AI') ?: exit("Set the TYPESAFE_AI environment variable.\n"));
 

@@ -3,7 +3,6 @@
 /Makefile                  export-ignore
 /*.dist                    export-ignore
 /*.?ml                     export-ignore
-/examples                  export-ignore
 /tests                     export-ignore
 
 # Test with:
