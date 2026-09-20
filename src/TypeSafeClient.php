@@ -152,14 +152,10 @@ class TypeSafeClient
             'headers' => ['Content-Type' => 'application/json'],
         ]);
 
-        /** @var SystemOneResult $result */
-        $result = $this->serializer->deserialize(
+        return $this->deserialize(
             (string) $response->getBody(),
             SystemOneResult::class,
-            'json',
         );
-
-        return $result;
     }
 
     /**
@@ -171,14 +167,27 @@ class TypeSafeClient
     {
         $response = $this->client->get(self::MODELS);
 
-        /** @var ModelsResponse $result */
-        $result = $this->serializer->deserialize(
+        return $this->deserialize(
             (string) $response->getBody(),
             ModelsResponse::class,
+        );
+    }
+
+    /**
+     * @template T of object
+     * @param class-string<T> $type
+     * @return T
+     */
+    private function deserialize(string $data, string $type): object
+    {
+        /** @var T $type */
+        $type = $this->serializer->deserialize(
+            $data,
+            $type,
             'json',
         );
 
-        return $result;
+        return $type;
     }
 
     /**
