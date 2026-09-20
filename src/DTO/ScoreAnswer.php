@@ -26,22 +26,16 @@ use JMS\Serializer\Annotation\Type;
 
 class ScoreAnswer extends Answer
 {
-    /**
-     * Excluded because JMS writes the discriminator itself; the default is here to be read.
-     */
     #[Exclude]
     public string $type = 'score';
 
     /**
-     * The probability-weighted level; can land between levels.
+     * The probability-weighted level; can appear between levels.
      */
     public float $score;
 
     /**
-     * Each level index mapped back to its description.
-     *
-     * The API echoes structured levels back as they were sent, so a description
-     * here can be text or structured JSON.
+     * Each level index mapped to its description, as they were sent.
      *
      * @var array<int, string|array<mixed>>
      */

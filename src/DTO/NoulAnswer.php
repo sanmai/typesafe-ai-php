@@ -25,9 +25,6 @@ use JMS\Serializer\Annotation\Exclude;
 
 class NoulAnswer extends Answer
 {
-    /**
-     * Excluded because JMS writes the discriminator itself; the default is here to be read.
-     */
     #[Exclude]
     public string $type = 'noul';
 
