@@ -21,20 +21,17 @@ declare(strict_types=1);
 
 namespace TypeSafeAI\DTO;
 
-/**
- * One model available to the account.
- */
 class ModelCard
 {
     /**
-     * The name to give as the model of a request, such as "jev-latest".
+     * Model codename, such as "jev-latest".
      */
     public string $name;
 
     public string $description;
 
     /**
-     * When the model became available, as an ISO 8601 timestamp.
+     * ISO 8601 timestamp
      */
     public string $release_date;
 }
