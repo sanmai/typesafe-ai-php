@@ -46,14 +46,8 @@ class TypeSafeClient
 {
     public const BASE_URI = 'https://api.typesafe.ai';
 
-    /**
-     * Read when the API key is not given. The other SDKs use the same name.
-     */
     public const API_KEY_ENV = 'TYPESAFE_API_KEY';
 
-    /**
-     * Read when base_uri is not given. The other SDKs use the same name.
-     */
     public const BASE_URL_ENV = 'TYPESAFE_BASE_URL';
 
     private const SYSTEM_ONE = '/v1/systemone';
@@ -171,7 +165,7 @@ class TypeSafeClient
     /**
      * Lists the models available to the account.
      *
-     * @throws GuzzleException On 401 (bad API key), or when retries run out
+     * @throws GuzzleException On 401 (bad API key), or when rate limited
      */
     public function models(): ModelsResponse
     {
