@@ -32,7 +32,7 @@ use UnexpectedValueException;
 use function get_debug_type;
 use function sprintf;
 
-class EvaluationResponse
+class SystemOneResult
 {
     /**
      * The model that performed the evaluation.

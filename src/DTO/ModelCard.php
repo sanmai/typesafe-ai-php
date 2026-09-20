@@ -21,15 +21,17 @@ declare(strict_types=1);
 
 namespace TypeSafeAI\DTO;
 
-use JMS\Serializer\Annotation\Exclude;
-
-class NoulAnswer extends Answer
+class ModelCard
 {
-    #[Exclude]
-    public string $type = 'noul';
+    /**
+     * Model codename, such as "jev-latest".
+     */
+    public string $name;
+
+    public string $description;
 
     /**
-     * The yes/no answer on a scale from 0 (no) to 1 (yes).
+     * ISO 8601 timestamp
      */
-    public float $noul;
+    public string $release_date;
 }

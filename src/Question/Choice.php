@@ -25,18 +25,20 @@ use JMS\Serializer\Annotation\Type;
 
 /**
  * Picks one option from the set you define.
+ *
+ * @phpstan-import-type EntryType from Question
  */
 class Choice implements Question
 {
     public string $type = 'choice';
 
     /**
-     * @param string|array<mixed>|object $instructions
-     * @param array<array-key, string|null> $criteria Options mapped to their descriptions; null when an option needs no description.
+     * @param EntryType $instructions
+     * @param array<array-key, EntryType> $criteria Options mapped to their descriptions; null when an option needs no description.
      */
     public function __construct(
-        public string|array|object $instructions,
-        #[Type('array<string, string>')]
-        public array $criteria,
+        public string|array|object|null $instructions = null,
+        #[Type('array<string, union>')]
+        public array $criteria = [],
     ) {}
 }

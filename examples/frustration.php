@@ -21,25 +21,31 @@ declare(strict_types=1);
 
 // A score question: how frustrated is the customer, from calm to very angry?
 //
-// Run: TYPESAFE_AI=your-api-key php examples/frustration.php
+// Run: TYPESAFE_API_KEY=your-api-key php examples/frustration.php
 
-use TypeSafeAI\EvaluationRequest;
+use TypeSafeAI\SystemOneRequest;
 use TypeSafeAI\TypeSafeClient;
 
 require 'vendor/autoload.php';
 
-$client = TypeSafeClient::createInstance(getenv('TYPESAFE_AI') ?: exit("Set the TYPESAFE_AI environment variable.\n"));
+$client = TypeSafeClient::createInstance();
 
-$response = $client->evaluate(
-    EvaluationRequest::build('Help! My payouts have been failing for 3 days.')
+$response = $client->systemOne(
+    SystemOneRequest::build('Help! My payouts have been failing for 3 days.')
         ->score('frustration', 'How frustrated is the customer?', ['Calm', 'Frustrated', 'Very angry']),
 );
 
 $frustration = $response->score('frustration');
 
-// The score is a probability-weighted level, so it can land between levels
+// The score is a probability-weighted level, so it can appear in between levels
 printf("Frustration: %.2f of %d (confidence %.2f)\n", $frustration->score, count($frustration->legend) - 1, $frustration->confidence);
 
+// The description could be JSON, if that was initially provided
 foreach ($frustration->legend as $level => $description) {
-    printf("  %d %-12s %.2f\n", $level, $description, $frustration->probabilities[$level]);
+    printf(
+        "  %d %-12s %.2f\n",
+        $level,
+        is_string($description) ? $description : json_encode($description),
+        $frustration->probabilities[$level],
+    );
 }

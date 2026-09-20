@@ -21,21 +21,25 @@ declare(strict_types=1);
 
 namespace TypeSafeAI\DTO;
 
+use JMS\Serializer\Annotation\Exclude;
 use JMS\Serializer\Annotation\Type;
 
 class ScoreAnswer extends Answer
 {
+    #[Exclude]
+    public string $type = 'score';
+
     /**
-     * The probability-weighted level; can land between levels.
+     * The probability-weighted level; can appear between levels.
      */
     public float $score;
 
     /**
-     * Each level index mapped back to its description.
+     * Each level index mapped to its description, as they were sent.
      *
-     * @var array<int, string>
+     * @var array<int, string|array<mixed>>
      */
-    #[Type('array<int, string>')]
+    #[Type('array')]
     public array $legend;
 
     /**

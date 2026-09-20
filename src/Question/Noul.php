@@ -25,16 +25,18 @@ use JMS\Serializer\Annotation\SkipWhenEmpty;
 
 /**
  * A yes/no question. The answer is the probability of yes.
+ *
+ * @phpstan-import-type EntryType from Question
  */
 class Noul implements Question
 {
     public string $type = 'noul';
 
     /**
-     * @param string|array<mixed>|object $instructions
+     * @param EntryType $instructions
      */
     public function __construct(
-        public string|array|object $instructions,
+        public string|array|object|null $instructions = null,
         #[SkipWhenEmpty]
         public NoulCriteria $criteria = new NoulCriteria(),
     ) {}

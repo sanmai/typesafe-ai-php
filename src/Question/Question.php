@@ -23,5 +23,9 @@ namespace TypeSafeAI\Question;
 
 /**
  * A typed question. The client serializes its public properties, null values included.
+ *
+ * The API accepts text, structured JSON, or null, for instructions and criteria.
+ *
+ * @phpstan-type EntryType string|array<mixed>|object|null
  */
 interface Question {}

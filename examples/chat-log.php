@@ -21,14 +21,14 @@ declare(strict_types=1);
 
 // Several questions of different types about a structured state (a chat log), in one request.
 //
-// Run: TYPESAFE_AI=your-api-key php examples/chat-log.php
+// Run: TYPESAFE_API_KEY=your-api-key php examples/chat-log.php
 
-use TypeSafeAI\EvaluationRequest;
+use TypeSafeAI\SystemOneRequest;
 use TypeSafeAI\TypeSafeClient;
 
 require 'vendor/autoload.php';
 
-$client = TypeSafeClient::createInstance(getenv('TYPESAFE_AI') ?: exit("Set the TYPESAFE_AI environment variable.\n"));
+$client = TypeSafeClient::createInstance();
 
 $chat = [
     ['role' => 'customer', 'content' => 'I was charged twice for my subscription this month.'],
@@ -36,8 +36,8 @@ $chat = [
     ['role' => 'customer', 'content' => 'Thanks, that was quick.'],
 ];
 
-$response = $client->evaluate(
-    EvaluationRequest::build($chat)
+$response = $client->systemOne(
+    SystemOneRequest::build($chat)
         ->noul('resolved', 'Did the agent resolve the issue?')
         ->choice('topic', 'What was the conversation about?', [
             'billing' => null,

@@ -22,21 +22,21 @@ namespace Tests\TypeSafeAI;
 use TypeSafeAI\DTO\ChoiceAnswer;
 use TypeSafeAI\DTO\NoulAnswer;
 use TypeSafeAI\DTO\ScoreAnswer;
-use TypeSafeAI\EvaluationResponse;
+use TypeSafeAI\SystemOneResult;
 use UnexpectedValueException;
 
 /**
- * @covers \TypeSafeAI\EvaluationResponse
+ * @covers \TypeSafeAI\SystemOneResult
  */
-class EvaluationResponseTest extends TestCase
+class SystemOneResultTest extends TestCase
 {
-    private EvaluationResponse $response;
+    private SystemOneResult $response;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->response = $this->deserializeFile(__DIR__ . '/data/evaluation_mixed.json', EvaluationResponse::class);
+        $this->response = $this->deserializeFile(__DIR__ . '/data/evaluation_mixed.json', SystemOneResult::class);
     }
 
     public function testFields(): void
@@ -51,6 +51,7 @@ class EvaluationResponseTest extends TestCase
     {
         $answer = $this->response->noul('is_urgent');
 
+        $this->assertSame('noul', $answer->type);
         $this->assertSame(0.92, $answer->noul);
     }
 
@@ -58,6 +59,7 @@ class EvaluationResponseTest extends TestCase
     {
         $answer = $this->response->choice('department');
 
+        $this->assertSame('choice', $answer->type);
         $this->assertSame('technical', $answer->choice);
         $this->assertSame(['billing' => 0.08, 'technical' => 0.85, 'sales' => 0.07], $answer->probabilities);
         $this->assertSame(0.82, $answer->confidence);
@@ -67,10 +69,24 @@ class EvaluationResponseTest extends TestCase
     {
         $answer = $this->response->score('frustration');
 
+        $this->assertSame('score', $answer->type);
         $this->assertSame(1.6, $answer->score);
         $this->assertSame(['Calm', 'Frustrated', 'Very angry'], $answer->legend);
         $this->assertSame([0.05, 0.3, 0.65], $answer->probabilities);
         $this->assertSame(0.78, $answer->confidence);
+    }
+
+    public function testStructuredScoreLegend(): void
+    {
+        $response = $this->deserializeFile(__DIR__ . '/data/evaluation_structured_score.json', SystemOneResult::class);
+
+        $answer = $response->score('scope');
+
+        $this->assertSame([
+            ['summary' => 'One change, clearly stated', 'signals' => ['A single fix']],
+            ['summary' => 'One main change plus a tweak', 'signals' => ['A minor adjacent edit']],
+            'Several independent changes bundled together',
+        ], $answer->legend);
     }
 
     public static function provideWrongIds(): iterable

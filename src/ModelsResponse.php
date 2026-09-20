@@ -19,17 +19,19 @@
 
 declare(strict_types=1);
 
-namespace TypeSafeAI\DTO;
+namespace TypeSafeAI;
 
-use JMS\Serializer\Annotation\Exclude;
+use JMS\Serializer\Annotation\Type;
+use TypeSafeAI\DTO\ModelCard;
 
-class NoulAnswer extends Answer
+/**
+ * The models available to the account.
+ */
+class ModelsResponse
 {
-    #[Exclude]
-    public string $type = 'noul';
-
     /**
-     * The yes/no answer on a scale from 0 (no) to 1 (yes).
+     * @var array<ModelCard>
      */
-    public float $noul;
+    #[Type('array<TypeSafeAI\DTO\ModelCard>')]
+    public array $models;
 }

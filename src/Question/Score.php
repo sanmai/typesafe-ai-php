@@ -25,18 +25,20 @@ use JMS\Serializer\Annotation\Type;
 
 /**
  * Rates the state along the ordered levels you define.
+ *
+ * @phpstan-import-type EntryType from Question
  */
 class Score implements Question
 {
     public string $type = 'score';
 
     /**
-     * @param string|array<mixed>|object $instructions
-     * @param array<string> $criteria Level descriptions, from the lowest to the highest.
+     * @param EntryType $instructions
+     * @param array<EntryType> $criteria Level descriptions, from the lowest to the highest.
      */
     public function __construct(
-        public string|array|object $instructions,
-        #[Type('array<string>')]
-        public array $criteria,
+        public string|array|object|null $instructions = null,
+        #[Type('array<union>')]
+        public array $criteria = [],
     ) {}
 }

@@ -30,8 +30,10 @@ use TypeSafeAI\Question\Score;
 
 /**
  * The state to evaluate, and the questions to answer about it.
+ *
+ * @phpstan-import-type EntryType from Question
  */
-class EvaluationRequest
+class SystemOneRequest
 {
     public const MODEL_LATEST = 'jev-latest';
 
@@ -67,30 +69,36 @@ class EvaluationRequest
     }
 
     /**
-     * @param string|array<mixed>|object $instructions
+     * @param EntryType $instructions
+     * @param EntryType $true
+     * @param EntryType $false
      * @see Noul
      */
-    public function noul(string $id, string|array|object $instructions, ?string $true = null, ?string $false = null): self
-    {
+    public function noul(
+        string $id,
+        string|array|object|null $instructions = null,
+        string|array|object|null $true = null,
+        string|array|object|null $false = null,
+    ): self {
         return $this->ask($id, new Noul($instructions, new NoulCriteria($true, $false)));
     }
 
     /**
-     * @param string|array<mixed>|object $instructions
-     * @param array<array-key, string|null> $criteria
+     * @param EntryType $instructions
+     * @param array<array-key, EntryType> $criteria
      * @see Choice
      */
-    public function choice(string $id, string|array|object $instructions, array $criteria): self
+    public function choice(string $id, string|array|object|null $instructions, array $criteria): self
     {
         return $this->ask($id, new Choice($instructions, $criteria));
     }
 
     /**
-     * @param string|array<mixed>|object $instructions
-     * @param array<string> $levels
+     * @param EntryType $instructions
+     * @param array<EntryType> $levels
      * @see Score
      */
-    public function score(string $id, string|array|object $instructions, array $levels): self
+    public function score(string $id, string|array|object|null $instructions, array $levels): self
     {
         return $this->ask($id, new Score($instructions, $levels));
     }

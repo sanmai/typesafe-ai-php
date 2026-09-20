@@ -22,25 +22,26 @@ namespace Tests\TypeSafeAI;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ConnectException;
-use GuzzleHttp\Exception\ServerException;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use InvalidArgumentException;
 use JMS\Serializer\Exception\LogicException;
 use Psr\Log\AbstractLogger;
 use Stringable;
-use TypeSafeAI\EvaluationRequest;
+use TypeSafeAI\SystemOneRequest;
 use TypeSafeAI\TypeSafeClient;
 
 use function file_get_contents;
+use function putenv;
 
 /**
  * @covers \TypeSafeAI\TypeSafeClient
  */
 class TypeSafeClientTest extends TestCase
 {
-    private static function request(): EvaluationRequest
+    private static function request(): SystemOneRequest
     {
-        return EvaluationRequest::build('Help! My payouts have been failing for 3 days.')
+        return SystemOneRequest::build('Help! My payouts have been failing for 3 days.')
             ->noul('is_urgent', 'Does this convey urgency?');
     }
 
@@ -52,7 +53,35 @@ class TypeSafeClientTest extends TestCase
         $this->assertTrue($httpClient->getConfig('http_errors'));
         $this->assertFalse($httpClient->getConfig('allow_redirects'));
         $this->assertSame(3, $httpClient->getConfig('connect_timeout'));
-        $this->assertSame(120, $httpClient->getConfig('timeout'));
+        $this->assertSame(10, $httpClient->getConfig('timeout'));
+        $this->assertSame('https://api.typesafe.ai', (string) $httpClient->getConfig('base_uri'));
+    }
+
+    public function testCreateInstanceReadsEnvironment(): void
+    {
+        putenv('TYPESAFE_API_KEY=from-env');
+        putenv('TYPESAFE_BASE_URL=https://env.example.com');
+
+        try {
+            /** @var Client $httpClient */
+            $httpClient = $this->getPropertyValue(TypeSafeClient::createInstance(), 'client');
+
+            $this->assertSame('https://env.example.com', (string) $httpClient->getConfig('base_uri'));
+            $this->assertSame('Bearer from-env', $httpClient->getConfig('headers')['Authorization']);
+        } finally {
+            putenv('TYPESAFE_API_KEY');
+            putenv('TYPESAFE_BASE_URL');
+        }
+    }
+
+    public function testCreateInstanceWithoutApiKey(): void
+    {
+        putenv('TYPESAFE_API_KEY');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('No API key given and TYPESAFE_API_KEY is not set.');
+
+        TypeSafeClient::createInstance();
     }
 
     public function testCreateInstanceWithClientOptions(): void
@@ -62,17 +91,17 @@ class TypeSafeClientTest extends TestCase
             'timeout' => 42,
         ]);
 
-        $client->evaluate(self::request());
+        $client->systemOne(self::request());
 
         $this->assertSame('https://sandbox.example.com/v1/systemone', (string) $this->getLastRequest()->getUri());
         $this->assertSame(42, $this->getLastOptions()['timeout']);
     }
 
-    public function testEvaluate(): void
+    public function testSystemOne(): void
     {
         $client = $this->clientWith([self::success()]);
 
-        $response = $client->evaluate(self::request());
+        $response = $client->systemOne(self::request());
 
         $this->assertSame(0.92, $response->noul('is_urgent')->noul);
 
@@ -89,9 +118,54 @@ class TypeSafeClientTest extends TestCase
         );
     }
 
+    public function testModels(): void
+    {
+        $client = $this->clientWith([
+            new Response(200, ['Content-Type' => 'application/json'], file_get_contents(__DIR__ . '/data/models.json')),
+        ]);
+
+        $response = $client->models();
+
+        $this->assertCount(2, $response->models);
+        $this->assertSame('jev-latest', $response->models[0]->name);
+        $this->assertSame("The latest iteration of TypeSafe's System One Model: Jev", $response->models[0]->description);
+        $this->assertSame('2026-09-10T18:38:01.391457+00:00', $response->models[0]->release_date);
+        $this->assertSame('jev-preview', $response->models[1]->name);
+
+        $request = $this->getLastRequest();
+
+        $this->assertSame('GET', $request->getMethod());
+        $this->assertSame('https://api.typesafe.ai/v1/models', (string) $request->getUri());
+        $this->assertSame('Bearer secret', $request->getHeaderLine('Authorization'));
+        $this->assertSame('', (string) $request->getBody());
+    }
+
+    public function testModelsIsRetried(): void
+    {
+        $client = $this->clientWith([
+            new Response(503),
+            new Response(200, ['Content-Type' => 'application/json'], file_get_contents(__DIR__ . '/data/models.json')),
+        ]);
+
+        $this->assertCount(2, $client->models()->models);
+        $this->assertCount(0, $this->mock);
+    }
+
+    public function testModelsError(): void
+    {
+        $client = $this->clientWith([new Response(401)]);
+
+        $this->expectException(ClientException::class);
+
+        $client->models();
+    }
+
     public static function provideRetriedResponses(): iterable
     {
+        yield 'request timeout' => [new Response(408)];
         yield 'too many requests' => [new Response(429)];
+        yield 'server error' => [new Response(500)];
+        yield 'service unavailable' => [new Response(503)];
         yield 'overloaded' => [new Response(529)];
         yield 'timeout' => [new ConnectException('Timed out', new Request('POST', '/'))];
     }
@@ -103,7 +177,7 @@ class TypeSafeClientTest extends TestCase
     {
         $client = $this->clientWith([$failure, $failure, self::success()]);
 
-        $response = $client->evaluate(self::request());
+        $response = $client->systemOne(self::request());
 
         $this->assertSame('jev-latest', $response->model);
         $this->assertCount(0, $this->mock);
@@ -116,28 +190,27 @@ class TypeSafeClientTest extends TestCase
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('The type value "rank" does not exist in the discriminator map');
 
-        $client->evaluate(self::request());
+        $client->systemOne(self::request());
     }
 
     public static function provideErrors(): iterable
     {
-        yield 'unauthorized' => [401, ClientException::class];
-        yield 'unprocessable' => [422, ClientException::class];
-        yield 'server error' => [500, ServerException::class];
+        yield 'bad request' => [400];
+        yield 'unauthorized' => [401];
+        yield 'unprocessable' => [422];
     }
 
     /**
      * @dataProvider provideErrors
      */
-    public function testErrorsAreNotRetried(int $status, string $exception): void
+    public function testErrorsAreNotRetried(int $status): void
     {
         $client = $this->clientWith([new Response($status), self::success()]);
 
         try {
-            $client->evaluate(self::request());
+            $client->systemOne(self::request());
             $this->fail('No exception thrown');
-        } catch (ClientException|ServerException $e) {
-            $this->assertInstanceOf($exception, $e);
+        } catch (ClientException $e) {
             $this->assertSame($status, $e->getResponse()->getStatusCode());
         }
 
@@ -164,7 +237,7 @@ class TypeSafeClientTest extends TestCase
 
         $this->assertSame($client, $client->setLogger($logger, '{method} {res_body}'));
 
-        $response = $client->evaluate(self::request());
+        $response = $client->systemOne(self::request());
 
         // The logger reads the body first; the client must still see all of it
         $this->assertSame(0.92, $response->noul('is_urgent')->noul);
@@ -177,7 +250,7 @@ class TypeSafeClientTest extends TestCase
 
         $client = $this->clientWith([self::success()]);
         $client->setLogger($logger);
-        $client->evaluate(self::request());
+        $client->systemOne(self::request());
 
         $this->assertSame([
             ">>>>>>>>\nPOST https://api.typesafe.ai/v1/systemone HTTP/1.1\n\n"

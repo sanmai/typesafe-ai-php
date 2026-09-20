@@ -21,10 +21,14 @@ declare(strict_types=1);
 
 namespace TypeSafeAI\DTO;
 
+use JMS\Serializer\Annotation\Exclude;
 use JMS\Serializer\Annotation\Type;
 
 class ChoiceAnswer extends Answer
 {
+    #[Exclude]
+    public string $type = 'choice';
+
     /**
      * The highest-probability option.
      */
