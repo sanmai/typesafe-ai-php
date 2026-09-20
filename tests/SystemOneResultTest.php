@@ -51,6 +51,7 @@ class SystemOneResultTest extends TestCase
     {
         $answer = $this->response->noul('is_urgent');
 
+        $this->assertSame('noul', $answer->type);
         $this->assertSame(0.92, $answer->noul);
     }
 
@@ -58,6 +59,7 @@ class SystemOneResultTest extends TestCase
     {
         $answer = $this->response->choice('department');
 
+        $this->assertSame('choice', $answer->type);
         $this->assertSame('technical', $answer->choice);
         $this->assertSame(['billing' => 0.08, 'technical' => 0.85, 'sales' => 0.07], $answer->probabilities);
         $this->assertSame(0.82, $answer->confidence);
@@ -67,6 +69,7 @@ class SystemOneResultTest extends TestCase
     {
         $answer = $this->response->score('frustration');
 
+        $this->assertSame('score', $answer->type);
         $this->assertSame(1.6, $answer->score);
         $this->assertSame(['Calm', 'Frustrated', 'Very angry'], $answer->legend);
         $this->assertSame([0.05, 0.3, 0.65], $answer->probabilities);

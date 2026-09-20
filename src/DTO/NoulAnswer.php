@@ -21,8 +21,16 @@ declare(strict_types=1);
 
 namespace TypeSafeAI\DTO;
 
+use JMS\Serializer\Annotation\Exclude;
+
 class NoulAnswer extends Answer
 {
+    /**
+     * Excluded because JMS writes the discriminator itself; the default is here to be read.
+     */
+    #[Exclude]
+    public string $type = 'noul';
+
     /**
      * The yes/no answer on a scale from 0 (no) to 1 (yes).
      */

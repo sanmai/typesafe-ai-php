@@ -21,10 +21,17 @@ declare(strict_types=1);
 
 namespace TypeSafeAI\DTO;
 
+use JMS\Serializer\Annotation\Exclude;
 use JMS\Serializer\Annotation\Type;
 
 class ScoreAnswer extends Answer
 {
+    /**
+     * Excluded because JMS writes the discriminator itself; the default is here to be read.
+     */
+    #[Exclude]
+    public string $type = 'score';
+
     /**
      * The probability-weighted level; can land between levels.
      */
