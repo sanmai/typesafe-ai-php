@@ -58,6 +58,8 @@ class TypeSafeClient
 
     private const SYSTEM_ONE = '/v1/systemone';
 
+    private const MODELS = '/v1/models';
+
     private const HTTP_REQUEST_TIMEOUT = 408;
 
     private const HTTP_TOO_MANY_REQUESTS = 429;
@@ -160,6 +162,25 @@ class TypeSafeClient
         $result = $this->serializer->deserialize(
             (string) $response->getBody(),
             SystemOneResult::class,
+            'json',
+        );
+
+        return $result;
+    }
+
+    /**
+     * Lists the models available to the account.
+     *
+     * @throws GuzzleException On 401 (bad API key), or when retries run out
+     */
+    public function models(): ModelsResponse
+    {
+        $response = $this->client->get(self::MODELS);
+
+        /** @var ModelsResponse $result */
+        $result = $this->serializer->deserialize(
+            (string) $response->getBody(),
+            ModelsResponse::class,
             'json',
         );
 

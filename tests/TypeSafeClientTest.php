@@ -118,6 +118,48 @@ class TypeSafeClientTest extends TestCase
         );
     }
 
+    public function testModels(): void
+    {
+        $client = $this->clientWith([
+            new Response(200, ['Content-Type' => 'application/json'], file_get_contents(__DIR__ . '/data/models.json')),
+        ]);
+
+        $response = $client->models();
+
+        $this->assertCount(2, $response->models);
+        $this->assertSame('jev-latest', $response->models[0]->name);
+        $this->assertSame("The latest iteration of TypeSafe's System One Model: Jev", $response->models[0]->description);
+        $this->assertSame('2026-09-10T18:38:01.391457+00:00', $response->models[0]->release_date);
+        $this->assertSame('jev-preview', $response->models[1]->name);
+
+        $request = $this->getLastRequest();
+
+        $this->assertSame('GET', $request->getMethod());
+        $this->assertSame('https://api.typesafe.ai/v1/models', (string) $request->getUri());
+        $this->assertSame('Bearer secret', $request->getHeaderLine('Authorization'));
+        $this->assertSame('', (string) $request->getBody());
+    }
+
+    public function testModelsIsRetried(): void
+    {
+        $client = $this->clientWith([
+            new Response(503),
+            new Response(200, ['Content-Type' => 'application/json'], file_get_contents(__DIR__ . '/data/models.json')),
+        ]);
+
+        $this->assertCount(2, $client->models()->models);
+        $this->assertCount(0, $this->mock);
+    }
+
+    public function testModelsError(): void
+    {
+        $client = $this->clientWith([new Response(401)]);
+
+        $this->expectException(ClientException::class);
+
+        $client->models();
+    }
+
     public static function provideRetriedResponses(): iterable
     {
         yield 'request timeout' => [new Response(408)];

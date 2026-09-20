@@ -19,6 +19,7 @@
 
 namespace Tests\TypeSafeAI;
 
+use TypeSafeAI\ModelsResponse;
 use TypeSafeAI\SystemOneResult;
 
 use function basename;
@@ -29,6 +30,7 @@ class SerializationTest extends TestCase
 {
     private const PREFIX_CLASS_MAP = [
         'evaluation' => SystemOneResult::class,
+        'models' => ModelsResponse::class,
     ];
 
     public static function provideFiles(): iterable
