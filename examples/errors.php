@@ -21,7 +21,7 @@ declare(strict_types=1);
 
 // The SDK does not validate questions; the API does. An invalid request comes back as a 422 error.
 //
-// Run: TYPESAFE_AI=your-api-key php examples/errors.php
+// Run: TYPESAFE_API_KEY=your-api-key php examples/errors.php
 
 use GuzzleHttp\Exception\ClientException;
 use TypeSafeAI\SystemOneRequest;
@@ -29,7 +29,7 @@ use TypeSafeAI\TypeSafeClient;
 
 require 'vendor/autoload.php';
 
-$client = TypeSafeClient::createInstance(getenv('TYPESAFE_AI') ?: exit("Set the TYPESAFE_AI environment variable.\n"));
+$client = TypeSafeClient::createInstance();
 
 try {
     // A score question needs at least one level

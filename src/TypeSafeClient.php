@@ -30,10 +30,14 @@ use GuzzleRetry\GuzzleRetryMiddleware;
 use JMS\Serializer\Exception\LogicException;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
+use InvalidArgumentException;
 use JSONSerializer\Serializer;
 use Psr\Log\LoggerInterface;
 
 use function array_merge;
+use function getenv;
+use function range;
+use function sprintf;
 
 /**
  * TypeSafe AI API Client.
@@ -42,11 +46,31 @@ class TypeSafeClient
 {
     public const BASE_URI = 'https://api.typesafe.ai';
 
+    /**
+     * Read when the API key is not given. The other SDKs use the same name.
+     */
+    public const API_KEY_ENV = 'TYPESAFE_API_KEY';
+
+    /**
+     * Read when base_uri is not given. The other SDKs use the same name.
+     */
+    public const BASE_URL_ENV = 'TYPESAFE_BASE_URL';
+
     private const SYSTEM_ONE = '/v1/systemone';
+
+    private const HTTP_REQUEST_TIMEOUT = 408;
 
     private const HTTP_TOO_MANY_REQUESTS = 429;
 
-    private const HTTP_OVERLOADED = 529;
+    private const HTTP_SERVER_ERROR_FIRST = 500;
+
+    private const HTTP_SERVER_ERROR_LAST = 599;
+
+    private const MAX_RETRY_ATTEMPTS = 2;
+
+    private const TIMEOUT = 10;
+
+    private const CONNECT_TIMEOUT = 3;
 
     /**
      * Like MessageFormatter::DEBUG, but without headers
@@ -56,31 +80,38 @@ class TypeSafeClient
     /**
      * Build a new client instance.
      *
-     * @param string $apiKey TypeSafe API key
+     * @param string|null $apiKey TypeSafe API key; read from TYPESAFE_API_KEY when null
      * @param array<string, string> $extraHeaders Additional HTTP headers to send with every request
      * @param array<string, mixed> $retryOptions Options passed to GuzzleRetryMiddleware (retry_on_status, etc.)
      * @param array<string, mixed> $clientOptions Extra Guzzle client options (base_uri, timeout, etc.) merged after defaults
+     * @throws InvalidArgumentException When no API key is given and TYPESAFE_API_KEY is not set
      */
     public static function createInstance(
-        string $apiKey,
+        ?string $apiKey = null,
         array $extraHeaders = [],
         array $retryOptions = [],
         array $clientOptions = [],
     ): self {
+        $apiKey ??= getenv(self::API_KEY_ENV) ?: throw new InvalidArgumentException(
+            sprintf('No API key given and %s is not set.', self::API_KEY_ENV),
+        );
+
         $stack = HandlerStack::create();
 
         $stack->push(GuzzleRetryMiddleware::factory(array_merge([
             'retry_on_timeout' => true,
+            'max_retry_attempts' => self::MAX_RETRY_ATTEMPTS,
             'retry_on_status' => [
+                self::HTTP_REQUEST_TIMEOUT,
                 self::HTTP_TOO_MANY_REQUESTS,
-                self::HTTP_OVERLOADED,
+                ...range(self::HTTP_SERVER_ERROR_FIRST, self::HTTP_SERVER_ERROR_LAST),
             ],
         ], $retryOptions)), 'retry_on_status');
 
         $httpClient = new Client(array_merge([
-            'base_uri' => self::BASE_URI,
-            'connect_timeout' => 3,
-            'timeout' => 120,
+            'base_uri' => getenv(self::BASE_URL_ENV) ?: self::BASE_URI,
+            'connect_timeout' => self::CONNECT_TIMEOUT,
+            'timeout' => self::TIMEOUT,
             'http_errors' => true,
             'allow_redirects' => false,
             'headers' => array_merge([

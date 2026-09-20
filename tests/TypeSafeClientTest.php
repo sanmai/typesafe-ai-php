@@ -22,9 +22,9 @@ namespace Tests\TypeSafeAI;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ConnectException;
-use GuzzleHttp\Exception\ServerException;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use InvalidArgumentException;
 use JMS\Serializer\Exception\LogicException;
 use Psr\Log\AbstractLogger;
 use Stringable;
@@ -32,6 +32,7 @@ use TypeSafeAI\SystemOneRequest;
 use TypeSafeAI\TypeSafeClient;
 
 use function file_get_contents;
+use function putenv;
 
 /**
  * @covers \TypeSafeAI\TypeSafeClient
@@ -52,7 +53,35 @@ class TypeSafeClientTest extends TestCase
         $this->assertTrue($httpClient->getConfig('http_errors'));
         $this->assertFalse($httpClient->getConfig('allow_redirects'));
         $this->assertSame(3, $httpClient->getConfig('connect_timeout'));
-        $this->assertSame(120, $httpClient->getConfig('timeout'));
+        $this->assertSame(10, $httpClient->getConfig('timeout'));
+        $this->assertSame('https://api.typesafe.ai', (string) $httpClient->getConfig('base_uri'));
+    }
+
+    public function testCreateInstanceReadsEnvironment(): void
+    {
+        putenv('TYPESAFE_API_KEY=from-env');
+        putenv('TYPESAFE_BASE_URL=https://env.example.com');
+
+        try {
+            /** @var Client $httpClient */
+            $httpClient = $this->getPropertyValue(TypeSafeClient::createInstance(), 'client');
+
+            $this->assertSame('https://env.example.com', (string) $httpClient->getConfig('base_uri'));
+            $this->assertSame('Bearer from-env', $httpClient->getConfig('headers')['Authorization']);
+        } finally {
+            putenv('TYPESAFE_API_KEY');
+            putenv('TYPESAFE_BASE_URL');
+        }
+    }
+
+    public function testCreateInstanceWithoutApiKey(): void
+    {
+        putenv('TYPESAFE_API_KEY');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('No API key given and TYPESAFE_API_KEY is not set.');
+
+        TypeSafeClient::createInstance();
     }
 
     public function testCreateInstanceWithClientOptions(): void
@@ -68,7 +97,7 @@ class TypeSafeClientTest extends TestCase
         $this->assertSame(42, $this->getLastOptions()['timeout']);
     }
 
-    public function testEvaluate(): void
+    public function testSystemOne(): void
     {
         $client = $this->clientWith([self::success()]);
 
@@ -91,7 +120,10 @@ class TypeSafeClientTest extends TestCase
 
     public static function provideRetriedResponses(): iterable
     {
+        yield 'request timeout' => [new Response(408)];
         yield 'too many requests' => [new Response(429)];
+        yield 'server error' => [new Response(500)];
+        yield 'service unavailable' => [new Response(503)];
         yield 'overloaded' => [new Response(529)];
         yield 'timeout' => [new ConnectException('Timed out', new Request('POST', '/'))];
     }
@@ -121,23 +153,22 @@ class TypeSafeClientTest extends TestCase
 
     public static function provideErrors(): iterable
     {
-        yield 'unauthorized' => [401, ClientException::class];
-        yield 'unprocessable' => [422, ClientException::class];
-        yield 'server error' => [500, ServerException::class];
+        yield 'bad request' => [400];
+        yield 'unauthorized' => [401];
+        yield 'unprocessable' => [422];
     }
 
     /**
      * @dataProvider provideErrors
      */
-    public function testErrorsAreNotRetried(int $status, string $exception): void
+    public function testErrorsAreNotRetried(int $status): void
     {
         $client = $this->clientWith([new Response($status), self::success()]);
 
         try {
             $client->systemOne(self::request());
             $this->fail('No exception thrown');
-        } catch (ClientException|ServerException $e) {
-            $this->assertInstanceOf($exception, $e);
+        } catch (ClientException $e) {
             $this->assertSame($status, $e->getResponse()->getStatusCode());
         }
 

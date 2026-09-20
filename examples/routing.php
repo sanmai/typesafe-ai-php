@@ -21,14 +21,14 @@ declare(strict_types=1);
 
 // A choice question: which team should handle the ticket?
 //
-// Run: TYPESAFE_AI=your-api-key php examples/routing.php
+// Run: TYPESAFE_API_KEY=your-api-key php examples/routing.php
 
 use TypeSafeAI\SystemOneRequest;
 use TypeSafeAI\TypeSafeClient;
 
 require 'vendor/autoload.php';
 
-$client = TypeSafeClient::createInstance(getenv('TYPESAFE_AI') ?: exit("Set the TYPESAFE_AI environment variable.\n"));
+$client = TypeSafeClient::createInstance();
 
 $response = $client->systemOne(
     SystemOneRequest::build('Help! My payouts have been failing for 3 days.')
