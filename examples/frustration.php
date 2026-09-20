@@ -37,11 +37,11 @@ $response = $client->systemOne(
 
 $frustration = $response->score('frustration');
 
-// The score is a probability-weighted level, so it can land between levels
+// The score is a probability-weighted level, so it can appear in between levels
 printf("Frustration: %.2f of %d (confidence %.2f)\n", $frustration->score, count($frustration->legend) - 1, $frustration->confidence);
 
+// The description could be JSON, if that was initially provided
 foreach ($frustration->legend as $level => $description) {
-    // A level comes back as it was sent, so it is text here but can be structured JSON
     printf(
         "  %d %-12s %.2f\n",
         $level,
