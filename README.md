@@ -15,8 +15,8 @@ Requires PHP 8.2 or newer.
 There are three kinds of objects you work with:
 
 - **The client.** `TypeSafeClient` sends requests. Build it with the static `createInstance()` factory.
-- **The request.** `EvaluationRequest` retains the state to evaluate and the questions about it. You build it with a fluent interface.
-- **The response.** `EvaluationResponse` retains one answer for each question, under the same id you gave the question.
+- **The request.** `SystemOneRequest` retains the state to evaluate and the questions about it. You build it with a fluent interface.
+- **The response.** `SystemOneResult` retains one answer for each question, under the same id you gave the question.
 
 ## Usage
 
@@ -39,9 +39,9 @@ There are three question types:
 - **Score** rates the state along the ordered levels you define, from the lowest to the highest.
 
 ```php
-use TypeSafeAI\EvaluationRequest;
+use TypeSafeAI\SystemOneRequest;
 
-$request = EvaluationRequest::build('Help! My payouts have been failing for 3 days.')
+$request = SystemOneRequest::build('Help! My payouts have been failing for 3 days.')
     ->noul(
         'is_urgent',
         'Does this convey urgency?',
@@ -59,7 +59,7 @@ $request = EvaluationRequest::build('Help! My payouts have been failing for 3 da
         'Very angry',
     ]);
 
-$response = $client->evaluate($request);
+$response = $client->systemOne($request);
 ```
 
 The state and the instructions can be a string, or structured data such as an array or an object. Arrays and `stdClass` objects are sent as they are. Other objects are sent with their properties, private properties too; properties that are null are sent as null, and `JsonSerializable` is not used. If you need full control, convert the object to an array first.
@@ -70,7 +70,7 @@ The request uses the `jev-latest` model by default; to use a different model, gi
 use TypeSafeAI\Question\Noul;
 use TypeSafeAI\Question\NoulCriteria;
 
-$request = new EvaluationRequest($state, questions: [
+$request = new SystemOneRequest($state, questions: [
     'is_urgent' => new Noul(
         'Does this convey urgency?',
         new NoulCriteria(false: 'No urgency expressed'),
@@ -107,9 +107,9 @@ An accessor throws `UnexpectedValueException` if there is no answer with that id
 
 ### Custom Question Types
 
-`EvaluationRequest::ask()` adds any object that implements the `TypeSafeAI\Question\Question` marker interface. The `noul()`, `choice()`, and `score()` methods are shortcuts for `ask()` with the bundled `Noul`, `Choice`, and `Score` classes.
+`SystemOneRequest::ask()` adds any object that implements the `TypeSafeAI\Question\Question` marker interface. The `noul()`, `choice()`, and `score()` methods are shortcuts for `ask()` with the bundled `Noul`, `Choice`, and `Score` classes.
 
-Questions are plain data objects. The client serializes their properties to JSON, null values too. To add a question type, write a class with a `type` property and the fields that the API expects for that type. If the API does not accept null for an optional field, see how `NoulCriteria` leaves out the descriptions that are not set. The SDK can send a custom question, but it cannot read the answer: an answer type that the SDK does not know causes `evaluate()` to throw `JMS\Serializer\Exception\LogicException`, and the other answers in the response are lost too.
+Questions are plain data objects. The client serializes their properties to JSON, null values too. To add a question type, write a class with a `type` property and the fields that the API expects for that type. If the API does not accept null for an optional field, see how `NoulCriteria` leaves out the descriptions that are not set. The SDK can send a custom question, but it cannot read the answer: an answer type that the SDK does not know causes `systemOne()` to throw `JMS\Serializer\Exception\LogicException`, and the other answers in the response are lost too.
 
 ## Examples
 
@@ -133,7 +133,7 @@ The client retries `429 Too Many Requests`, `529 Overloaded`, and connection tim
 use GuzzleHttp\Exception\ClientException;
 
 try {
-    $response = $client->evaluate($request);
+    $response = $client->systemOne($request);
 } catch (ClientException $e) {
     $error = $e->getResponse();
     echo "Request failed (HTTP {$error->getStatusCode()}): {$error->getBody()}\n";

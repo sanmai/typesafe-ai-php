@@ -23,15 +23,15 @@ declare(strict_types=1);
 //
 // Run: TYPESAFE_AI=your-api-key php examples/frustration.php
 
-use TypeSafeAI\EvaluationRequest;
+use TypeSafeAI\SystemOneRequest;
 use TypeSafeAI\TypeSafeClient;
 
 require 'vendor/autoload.php';
 
 $client = TypeSafeClient::createInstance(getenv('TYPESAFE_AI') ?: exit("Set the TYPESAFE_AI environment variable.\n"));
 
-$response = $client->evaluate(
-    EvaluationRequest::build('Help! My payouts have been failing for 3 days.')
+$response = $client->systemOne(
+    SystemOneRequest::build('Help! My payouts have been failing for 3 days.')
         ->score('frustration', 'How frustrated is the customer?', ['Calm', 'Frustrated', 'Very angry']),
 );
 

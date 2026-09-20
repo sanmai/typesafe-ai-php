@@ -8,8 +8,8 @@ It is designed to be type-safe and easy to use: requests are built with a fluent
 - **API reference:** https://docs.typesafe.ai (one endpoint: `POST /v1/systemone`).
 - **Core Architecture:**
     - **Client:** `TypeSafeClient` sends requests and deserializes responses.
-    - **Request:** `EvaluationRequest` holds the state and a map of `Question` DTOs (`Noul`, `Choice`, `Score`). The client serializes it with JMS.
-    - **Response/DTOs:** `EvaluationResponse` holds a map of `Answer` DTOs. JMS picks the subclass from the `type` field.
+    - **Request:** `SystemOneRequest` holds the state and a map of `Question` DTOs (`Noul`, `Choice`, `Score`). The client serializes it with JMS.
+    - **Response/DTOs:** `SystemOneResult` holds a map of `Answer` DTOs. JMS picks the subclass from the `type` field.
 
 End-user documentation:
 
@@ -19,8 +19,8 @@ End-user documentation:
 
 **Where to look:**
 - **Core Logic:** @src/TypeSafeClient.php (the main entry point for all API calls).
-- **Request:** `src/EvaluationRequest.php` and `src/Question/`.
-- **Data Models:** `src/EvaluationResponse.php` and `src/DTO/` (all response objects).
+- **Request:** `src/SystemOneRequest.php` and `src/Question/`.
+- **Data Models:** `src/SystemOneResult.php` and `src/DTO/` (all response objects).
 - **Tests:** `tests/`, with response fixtures in `tests/data/`.
 
 ## Coding Standards
@@ -36,7 +36,7 @@ End-user documentation:
 - **JSON maps**: The API uses maps keyed by ids and options that you choose. Declare them with a key type, such as `#[Type('array<string, string>')]`: JMS then writes a JSON object, also when the map is empty or has keys such as `"0"`. Declare lists as `array<string>`; JMS re-indexes them.
 - **Nulls**: The client serializes with `serializeNull` on, so all null values are sent: in arrays (a choice option without a description) and in the user state. If a DTO has optional fields that the API must not get as null, the DTO leaves them out itself: exclude the properties and add an inline virtual property that returns only the values that are set (see `NoulCriteria::descriptions()`). To leave out a nested object when it gives no values, add `#[SkipWhenEmpty]` (see `Noul::$criteria`).
 - **Question type field**: Each question class has a `public string $type` property with a default value. There is no discriminator on requests, so a custom question type does not need a change in the SDK.
-- **Answer types**: `DTO\Answer` has a JMS `#[Discriminator]` on the `type` field. To add an answer type, add a subclass, a map entry, and an accessor on `EvaluationResponse`.
+- **Answer types**: `DTO\Answer` has a JMS `#[Discriminator]` on the `type` field. To add an answer type, add a subclass, a map entry, and an accessor on `SystemOneResult`.
 - **JMS attributes**: Use PHP attributes such as `#[Type(...)]` for JMS serializer metadata. Keep PHPDoc like `@var` where it provides static-analysis detail.
 - **Serializer property names**: The JSON serializer uses JMS' `IdenticalPropertyNamingStrategy`, so DTO property names must match API field names unless a `#[SerializedName(...)]` override is added.
 - **Retries**: `429` and `529` responses and connection timeouts are retried by `GuzzleRetryMiddleware`. Other HTTP errors throw Guzzle exceptions.

@@ -19,7 +19,7 @@
 
 namespace Tests\TypeSafeAI;
 
-use TypeSafeAI\EvaluationResponse;
+use TypeSafeAI\SystemOneResult;
 
 use function basename;
 use function glob;
@@ -28,7 +28,7 @@ use function str_starts_with;
 class SerializationTest extends TestCase
 {
     private const PREFIX_CLASS_MAP = [
-        'evaluation' => EvaluationResponse::class,
+        'evaluation' => SystemOneResult::class,
     ];
 
     public static function provideFiles(): iterable

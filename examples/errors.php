@@ -24,7 +24,7 @@ declare(strict_types=1);
 // Run: TYPESAFE_AI=your-api-key php examples/errors.php
 
 use GuzzleHttp\Exception\ClientException;
-use TypeSafeAI\EvaluationRequest;
+use TypeSafeAI\SystemOneRequest;
 use TypeSafeAI\TypeSafeClient;
 
 require 'vendor/autoload.php';
@@ -33,8 +33,8 @@ $client = TypeSafeClient::createInstance(getenv('TYPESAFE_AI') ?: exit("Set the 
 
 try {
     // A score question needs at least one level
-    $client->evaluate(
-        EvaluationRequest::build('Help! My payouts have been failing for 3 days.')
+    $client->systemOne(
+        SystemOneRequest::build('Help! My payouts have been failing for 3 days.')
             ->score('frustration', 'How frustrated is the customer?', []),
     );
 } catch (ClientException $e) {

@@ -42,7 +42,7 @@ class TypeSafeClient
 {
     public const BASE_URI = 'https://api.typesafe.ai';
 
-    private const EVALUATE = '/v1/systemone';
+    private const SYSTEM_ONE = '/v1/systemone';
 
     private const HTTP_TOO_MANY_REQUESTS = 429;
 
@@ -118,17 +118,17 @@ class TypeSafeClient
      * @throws GuzzleException On 401 (bad API key), 422 (invalid request), or when retries run out
      * @throws LogicException When an answer has a type that the SDK does not know
      */
-    public function evaluate(EvaluationRequest $request): EvaluationResponse
+    public function systemOne(SystemOneRequest $request): SystemOneResult
     {
-        $response = $this->client->post(self::EVALUATE, [
+        $response = $this->client->post(self::SYSTEM_ONE, [
             'body' => $this->serializer->serialize($request, 'json', self::serializationContext()),
             'headers' => ['Content-Type' => 'application/json'],
         ]);
 
-        /** @var EvaluationResponse $result */
+        /** @var SystemOneResult $result */
         $result = $this->serializer->deserialize(
             (string) $response->getBody(),
-            EvaluationResponse::class,
+            SystemOneResult::class,
             'json',
         );
 

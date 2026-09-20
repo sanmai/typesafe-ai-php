@@ -22,21 +22,21 @@ namespace Tests\TypeSafeAI;
 use TypeSafeAI\DTO\ChoiceAnswer;
 use TypeSafeAI\DTO\NoulAnswer;
 use TypeSafeAI\DTO\ScoreAnswer;
-use TypeSafeAI\EvaluationResponse;
+use TypeSafeAI\SystemOneResult;
 use UnexpectedValueException;
 
 /**
- * @covers \TypeSafeAI\EvaluationResponse
+ * @covers \TypeSafeAI\SystemOneResult
  */
-class EvaluationResponseTest extends TestCase
+class SystemOneResultTest extends TestCase
 {
-    private EvaluationResponse $response;
+    private SystemOneResult $response;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->response = $this->deserializeFile(__DIR__ . '/data/evaluation_mixed.json', EvaluationResponse::class);
+        $this->response = $this->deserializeFile(__DIR__ . '/data/evaluation_mixed.json', SystemOneResult::class);
     }
 
     public function testFields(): void

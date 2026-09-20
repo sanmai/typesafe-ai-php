@@ -31,7 +31,7 @@ use TypeSafeAI\Question\Score;
 /**
  * The state to evaluate, and the questions to answer about it.
  */
-class EvaluationRequest
+class SystemOneRequest
 {
     public const MODEL_LATEST = 'jev-latest';
 

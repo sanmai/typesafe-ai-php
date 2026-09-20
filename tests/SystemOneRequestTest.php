@@ -19,7 +19,7 @@
 
 namespace Tests\TypeSafeAI;
 
-use TypeSafeAI\EvaluationRequest;
+use TypeSafeAI\SystemOneRequest;
 use Tests\TypeSafeAI\Doubles\ExampleState;
 use TypeSafeAI\Question\Noul;
 use TypeSafeAI\Question\NoulCriteria;
@@ -27,20 +27,20 @@ use TypeSafeAI\Question\NoulCriteria;
 use function json_decode;
 
 /**
- * @covers \TypeSafeAI\EvaluationRequest
+ * @covers \TypeSafeAI\SystemOneRequest
  * @covers \TypeSafeAI\Question\Noul
  * @covers \TypeSafeAI\Question\NoulCriteria
  * @covers \TypeSafeAI\Question\Choice
  * @covers \TypeSafeAI\Question\Score
  */
-class EvaluationRequestTest extends TestCase
+class SystemOneRequestTest extends TestCase
 {
     private const STATE = 'Help! My payouts have been failing for 3 days.';
 
     public static function provideRequests(): iterable
     {
         yield 'noul' => [
-            fn() => EvaluationRequest::build(self::STATE)
+            fn() => SystemOneRequest::build(self::STATE)
                 ->noul('is_urgent', 'Does this convey urgency?'),
             '{
               "state": "Help! My payouts have been failing for 3 days.",
@@ -55,7 +55,7 @@ class EvaluationRequestTest extends TestCase
         ];
 
         yield 'noul with criteria' => [
-            fn() => EvaluationRequest::build(self::STATE)
+            fn() => SystemOneRequest::build(self::STATE)
                 ->noul('is_urgent', 'Does this convey urgency?', true: 'Explicitly time-sensitive', false: 'No urgency expressed'),
             '{
               "state": "Help! My payouts have been failing for 3 days.",
@@ -74,7 +74,7 @@ class EvaluationRequestTest extends TestCase
         ];
 
         yield 'noul with one criterion' => [
-            fn() => EvaluationRequest::build(self::STATE)
+            fn() => SystemOneRequest::build(self::STATE)
                 ->noul('is_urgent', 'Does this convey urgency?', false: 'No urgency expressed'),
             '{
               "state": "Help! My payouts have been failing for 3 days.",
@@ -92,7 +92,7 @@ class EvaluationRequestTest extends TestCase
         ];
 
         yield 'choice' => [
-            fn() => EvaluationRequest::build(self::STATE)
+            fn() => SystemOneRequest::build(self::STATE)
                 ->choice('department', 'Which team should handle this?', [
                     'billing' => 'Payments, invoicing, refunds',
                     'technical' => 'Bugs, outages, integrations',
@@ -116,7 +116,7 @@ class EvaluationRequestTest extends TestCase
         ];
 
         yield 'choice with numeric options' => [
-            fn() => EvaluationRequest::build(self::STATE)
+            fn() => SystemOneRequest::build(self::STATE)
                 ->choice('tier', 'Which support tier?', ['0' => 'Self-service', '1' => 'Priority']),
             '{
               "state": "Help! My payouts have been failing for 3 days.",
@@ -132,7 +132,7 @@ class EvaluationRequestTest extends TestCase
         ];
 
         yield 'choice without options' => [
-            fn() => EvaluationRequest::build(self::STATE)
+            fn() => SystemOneRequest::build(self::STATE)
                 ->choice('department', 'Which team should handle this?', []),
             '{
               "state": "Help! My payouts have been failing for 3 days.",
@@ -148,7 +148,7 @@ class EvaluationRequestTest extends TestCase
         ];
 
         yield 'score' => [
-            fn() => EvaluationRequest::build(self::STATE)
+            fn() => SystemOneRequest::build(self::STATE)
                 ->score('frustration', 'How frustrated is the customer?', ['low' => 'Calm', 'mid' => 'Frustrated', 'high' => 'Very angry']),
             '{
               "state": "Help! My payouts have been failing for 3 days.",
@@ -164,7 +164,7 @@ class EvaluationRequestTest extends TestCase
         ];
 
         yield 'score with one level' => [
-            fn() => EvaluationRequest::build(self::STATE)
+            fn() => SystemOneRequest::build(self::STATE)
                 ->score('frustration', 'Is the customer frustrated?', ['Calm']),
             '{
               "state": "Help! My payouts have been failing for 3 days.",
@@ -180,7 +180,7 @@ class EvaluationRequestTest extends TestCase
         ];
 
         yield 'structured state, numeric ids, other model' => [
-            fn() => EvaluationRequest::build([['role' => 'user', 'content' => 'Hi']], 'jev-other')
+            fn() => SystemOneRequest::build([['role' => 'user', 'content' => 'Hi']], 'jev-other')
                 ->ask('0', new Noul(['question' => 'Is this a greeting?'])),
             '{
               "state": [{"role": "user", "content": "Hi"}],
@@ -195,7 +195,7 @@ class EvaluationRequestTest extends TestCase
         ];
 
         yield 'constructor' => [
-            fn() => new EvaluationRequest(self::STATE, questions: [
+            fn() => new SystemOneRequest(self::STATE, questions: [
                 'is_urgent' => new Noul('Does this convey urgency?', new NoulCriteria(true: 'Explicitly time-sensitive')),
             ]),
             '{
@@ -212,7 +212,7 @@ class EvaluationRequestTest extends TestCase
         ];
 
         yield 'state with nulls' => [
-            fn() => EvaluationRequest::build(['ticket' => ['id' => 42, 'assignee' => null, 'tags' => []]]),
+            fn() => SystemOneRequest::build(['ticket' => ['id' => 42, 'assignee' => null, 'tags' => []]]),
             '{
               "state": {"ticket": {"id": 42, "assignee": null, "tags": []}},
               "model": "jev-latest",
@@ -221,7 +221,7 @@ class EvaluationRequestTest extends TestCase
         ];
 
         yield 'state as stdClass' => [
-            fn() => EvaluationRequest::build((object) ['id' => 42, 'assignee' => null]),
+            fn() => SystemOneRequest::build((object) ['id' => 42, 'assignee' => null]),
             '{
               "state": {"id": 42, "assignee": null},
               "model": "jev-latest",
@@ -230,7 +230,7 @@ class EvaluationRequestTest extends TestCase
         ];
 
         yield 'state as an object' => [
-            fn() => EvaluationRequest::build(new ExampleState()),
+            fn() => SystemOneRequest::build(new ExampleState()),
             '{
               "state": {"id": 42, "assignee": null, "secret": "private properties go out too"},
               "model": "jev-latest",
@@ -239,7 +239,7 @@ class EvaluationRequestTest extends TestCase
         ];
 
         yield 'no questions' => [
-            fn() => EvaluationRequest::build(self::STATE),
+            fn() => SystemOneRequest::build(self::STATE),
             '{
               "state": "Help! My payouts have been failing for 3 days.",
               "model": "jev-latest",
@@ -253,7 +253,7 @@ class EvaluationRequestTest extends TestCase
      */
     public function testJson(callable $build, string $expected): void
     {
-        $this->clientWith([self::success()])->evaluate($build());
+        $this->clientWith([self::success()])->systemOne($build());
 
         // Decoded JSON objects: key order does not matter, but {} and [], or a missing key and null, differ
         $this->assertEquals(json_decode($expected), json_decode((string) $this->getLastRequest()->getBody()));

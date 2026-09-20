@@ -28,7 +28,7 @@ use GuzzleHttp\Psr7\Response;
 use JMS\Serializer\Exception\LogicException;
 use Psr\Log\AbstractLogger;
 use Stringable;
-use TypeSafeAI\EvaluationRequest;
+use TypeSafeAI\SystemOneRequest;
 use TypeSafeAI\TypeSafeClient;
 
 use function file_get_contents;
@@ -38,9 +38,9 @@ use function file_get_contents;
  */
 class TypeSafeClientTest extends TestCase
 {
-    private static function request(): EvaluationRequest
+    private static function request(): SystemOneRequest
     {
-        return EvaluationRequest::build('Help! My payouts have been failing for 3 days.')
+        return SystemOneRequest::build('Help! My payouts have been failing for 3 days.')
             ->noul('is_urgent', 'Does this convey urgency?');
     }
 
@@ -62,7 +62,7 @@ class TypeSafeClientTest extends TestCase
             'timeout' => 42,
         ]);
 
-        $client->evaluate(self::request());
+        $client->systemOne(self::request());
 
         $this->assertSame('https://sandbox.example.com/v1/systemone', (string) $this->getLastRequest()->getUri());
         $this->assertSame(42, $this->getLastOptions()['timeout']);
@@ -72,7 +72,7 @@ class TypeSafeClientTest extends TestCase
     {
         $client = $this->clientWith([self::success()]);
 
-        $response = $client->evaluate(self::request());
+        $response = $client->systemOne(self::request());
 
         $this->assertSame(0.92, $response->noul('is_urgent')->noul);
 
@@ -103,7 +103,7 @@ class TypeSafeClientTest extends TestCase
     {
         $client = $this->clientWith([$failure, $failure, self::success()]);
 
-        $response = $client->evaluate(self::request());
+        $response = $client->systemOne(self::request());
 
         $this->assertSame('jev-latest', $response->model);
         $this->assertCount(0, $this->mock);
@@ -116,7 +116,7 @@ class TypeSafeClientTest extends TestCase
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('The type value "rank" does not exist in the discriminator map');
 
-        $client->evaluate(self::request());
+        $client->systemOne(self::request());
     }
 
     public static function provideErrors(): iterable
@@ -134,7 +134,7 @@ class TypeSafeClientTest extends TestCase
         $client = $this->clientWith([new Response($status), self::success()]);
 
         try {
-            $client->evaluate(self::request());
+            $client->systemOne(self::request());
             $this->fail('No exception thrown');
         } catch (ClientException|ServerException $e) {
             $this->assertInstanceOf($exception, $e);
@@ -164,7 +164,7 @@ class TypeSafeClientTest extends TestCase
 
         $this->assertSame($client, $client->setLogger($logger, '{method} {res_body}'));
 
-        $response = $client->evaluate(self::request());
+        $response = $client->systemOne(self::request());
 
         // The logger reads the body first; the client must still see all of it
         $this->assertSame(0.92, $response->noul('is_urgent')->noul);
@@ -177,7 +177,7 @@ class TypeSafeClientTest extends TestCase
 
         $client = $this->clientWith([self::success()]);
         $client->setLogger($logger);
-        $client->evaluate(self::request());
+        $client->systemOne(self::request());
 
         $this->assertSame([
             ">>>>>>>>\nPOST https://api.typesafe.ai/v1/systemone HTTP/1.1\n\n"

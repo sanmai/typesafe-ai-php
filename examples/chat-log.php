@@ -23,7 +23,7 @@ declare(strict_types=1);
 //
 // Run: TYPESAFE_AI=your-api-key php examples/chat-log.php
 
-use TypeSafeAI\EvaluationRequest;
+use TypeSafeAI\SystemOneRequest;
 use TypeSafeAI\TypeSafeClient;
 
 require 'vendor/autoload.php';
@@ -36,8 +36,8 @@ $chat = [
     ['role' => 'customer', 'content' => 'Thanks, that was quick.'],
 ];
 
-$response = $client->evaluate(
-    EvaluationRequest::build($chat)
+$response = $client->systemOne(
+    SystemOneRequest::build($chat)
         ->noul('resolved', 'Did the agent resolve the issue?')
         ->choice('topic', 'What was the conversation about?', [
             'billing' => null,
