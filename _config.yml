@@ -2,14 +2,16 @@ title: TypeSafe AI PHP SDK (Jev)
 description: A PHP client for the Jev and TypeSafe AI evaluation API
 theme: jekyll-theme-primer
 
+plugins:
+  - jekyll-relative-links
+
 exclude:
   - AGENTS.md
   - Makefile
-  - composer.json
-  - composer.lock
+  - "*.json*"
+  - "*.lock*"
   - examples/
-  - infection.json.dist
-  - phpunit.xml.dist
+  - "*.dist"
   - src/
   - tests/
   - vendor/
