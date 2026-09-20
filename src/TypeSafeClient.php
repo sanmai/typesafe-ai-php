@@ -31,6 +31,7 @@ use JMS\Serializer\Exception\LogicException;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
 use InvalidArgumentException;
+use JSONSerializer\Contracts\JsonDeserializer;
 use JSONSerializer\Serializer;
 use Psr\Log\LoggerInterface;
 
@@ -126,7 +127,7 @@ class TypeSafeClient
     public function __construct(
         private readonly Client $client,
         private readonly HandlerStack $stack,
-        private readonly SerializerInterface $serializer,
+        private readonly SerializerInterface&JsonDeserializer $serializer,
     ) {}
 
     public function setLogger(LoggerInterface $logger, string $template = self::LOG_TEMPLATE): self
@@ -152,7 +153,7 @@ class TypeSafeClient
             'headers' => ['Content-Type' => 'application/json'],
         ]);
 
-        return $this->deserialize(
+        return $this->serializer->deserializeJson(
             (string) $response->getBody(),
             SystemOneResult::class,
         );
@@ -167,27 +168,10 @@ class TypeSafeClient
     {
         $response = $this->client->get(self::MODELS);
 
-        return $this->deserialize(
+        return $this->serializer->deserializeJson(
             (string) $response->getBody(),
             ModelsResponse::class,
         );
-    }
-
-    /**
-     * @template T of object
-     * @param class-string<T> $type
-     * @return T
-     */
-    private function deserialize(string $data, string $type): object
-    {
-        /** @var T $type */
-        $type = $this->serializer->deserialize(
-            $data,
-            $type,
-            'json',
-        );
-
-        return $type;
     }
 
     /**
