@@ -40,9 +40,12 @@ class ScoreAnswer extends Answer
     /**
      * Each level index mapped back to its description.
      *
-     * @var array<int, string>
+     * The API echoes structured levels back as they were sent, so a description
+     * here can be text or structured JSON.
+     *
+     * @var array<int, string|array<mixed>>
      */
-    #[Type('array<int, string>')]
+    #[Type('array')]
     public array $legend;
 
     /**

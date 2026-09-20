@@ -1,0 +1,34 @@
+{
+    "model": "jev-1.13.0",
+    "answers": {
+        "scope": {
+            "type": "score",
+            "score": 0.0,
+            "confidence": 1.0,
+            "legend": {
+                "0": {
+                    "summary": "One change, clearly stated",
+                    "signals": [
+                        "A single fix"
+                    ]
+                },
+                "1": {
+                    "summary": "One main change plus a tweak",
+                    "signals": [
+                        "A minor adjacent edit"
+                    ]
+                },
+                "2": "Several independent changes bundled together"
+            },
+            "probabilities": {
+                "0": 1.0,
+                "1": 0.0,
+                "2": 0.0
+            }
+        }
+    },
+    "usage": {
+        "input_tokens": 355,
+        "output_tokens": 17
+    }
+}

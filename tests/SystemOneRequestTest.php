@@ -238,6 +238,97 @@ class SystemOneRequestTest extends TestCase
             }',
         ];
 
+        yield 'structured instructions' => [
+            fn() => SystemOneRequest::build(self::STATE)
+                ->noul('matches', ['question' => 'Does the value match?', 'compare' => ['a', 'b']]),
+            '{
+              "state": "Help! My payouts have been failing for 3 days.",
+              "model": "jev-latest",
+              "questions": {
+                "matches": {
+                  "type": "noul",
+                  "instructions": {"question": "Does the value match?", "compare": ["a", "b"]}
+                }
+              }
+            }',
+        ];
+
+        yield 'structured noul criteria' => [
+            fn() => SystemOneRequest::build(self::STATE)
+                ->noul('phishing', 'Is this phishing?', true: ['what' => 'Asks for a password', 'examples' => ['Reply with your PIN']]),
+            '{
+              "state": "Help! My payouts have been failing for 3 days.",
+              "model": "jev-latest",
+              "questions": {
+                "phishing": {
+                  "type": "noul",
+                  "instructions": "Is this phishing?",
+                  "criteria": {
+                    "true": {"what": "Asks for a password", "examples": ["Reply with your PIN"]}
+                  }
+                }
+              }
+            }',
+        ];
+
+        yield 'structured choice criteria' => [
+            fn() => SystemOneRequest::build(self::STATE)
+                ->choice('department', 'Which team?', [
+                    'billing' => ['what' => 'Charges and refunds', 'examples' => ['I was charged twice']],
+                    'sales' => null,
+                ]),
+            '{
+              "state": "Help! My payouts have been failing for 3 days.",
+              "model": "jev-latest",
+              "questions": {
+                "department": {
+                  "type": "choice",
+                  "instructions": "Which team?",
+                  "criteria": {
+                    "billing": {"what": "Charges and refunds", "examples": ["I was charged twice"]},
+                    "sales": null
+                  }
+                }
+              }
+            }',
+        ];
+
+        yield 'structured score criteria' => [
+            fn() => SystemOneRequest::build(self::STATE)
+                ->score('scope', 'How many changes?', [
+                    ['summary' => 'One change', 'signals' => ['A single fix']],
+                    'Several changes',
+                ]),
+            '{
+              "state": "Help! My payouts have been failing for 3 days.",
+              "model": "jev-latest",
+              "questions": {
+                "scope": {
+                  "type": "score",
+                  "instructions": "How many changes?",
+                  "criteria": [
+                    {"summary": "One change", "signals": ["A single fix"]},
+                    "Several changes"
+                  ]
+                }
+              }
+            }',
+        ];
+
+        yield 'without instructions' => [
+            fn() => SystemOneRequest::build(self::STATE)->ask('is_urgent', new Noul()),
+            '{
+              "state": "Help! My payouts have been failing for 3 days.",
+              "model": "jev-latest",
+              "questions": {
+                "is_urgent": {
+                  "type": "noul",
+                  "instructions": null
+                }
+              }
+            }',
+        ];
+
         yield 'no questions' => [
             fn() => SystemOneRequest::build(self::STATE),
             '{

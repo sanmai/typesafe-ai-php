@@ -76,6 +76,19 @@ class SystemOneResultTest extends TestCase
         $this->assertSame(0.78, $answer->confidence);
     }
 
+    public function testStructuredScoreLegend(): void
+    {
+        $response = $this->deserializeFile(__DIR__ . '/data/evaluation_structured_score.json', SystemOneResult::class);
+
+        $answer = $response->score('scope');
+
+        $this->assertSame([
+            ['summary' => 'One change, clearly stated', 'signals' => ['A single fix']],
+            ['summary' => 'One main change plus a tweak', 'signals' => ['A minor adjacent edit']],
+            'Several independent changes bundled together',
+        ], $answer->legend);
+    }
+
     public static function provideWrongIds(): iterable
     {
         yield 'wrong type' => ['noul', 'department', 'Expected ' . NoulAnswer::class . ' for "department", got ' . ChoiceAnswer::class];

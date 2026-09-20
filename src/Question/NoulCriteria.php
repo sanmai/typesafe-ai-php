@@ -27,34 +27,38 @@ use JMS\Serializer\Annotation\Type;
 use JMS\Serializer\Annotation\VirtualProperty;
 
 use function array_filter;
-use function is_string;
 
 /**
  * Optional descriptions of what a yes and a no mean.
+ *
+ * @phpstan-import-type EntryType from Question
  */
 class NoulCriteria
 {
     /**
-     * @param string|null $true What a yes (value near 1) means.
-     * @param string|null $false What a no (value near 0) means.
+     * @param EntryType $true What a yes (value near 1) means.
+     * @param EntryType $false What a no (value near 0) means.
      */
     public function __construct(
         #[Exclude]
-        public ?string $true = null,
+        public string|array|object|null $true = null,
         #[Exclude]
-        public ?string $false = null,
+        public string|array|object|null $false = null,
     ) {}
 
     /**
      * The client sends nulls, so this hook leaves out the descriptions that are not set.
      *
-     * @return array<string, string>
+     * @return array<string, EntryType>
      */
     #[VirtualProperty]
     #[Inline]
-    #[Type('array<string, string>')]
+    #[Type('array<string, union>')]
     public function descriptions(): array
     {
-        return array_filter(['true' => $this->true, 'false' => $this->false], is_string(...));
+        return array_filter(
+            ['true' => $this->true, 'false' => $this->false],
+            static fn($description) => null !== $description,
+        );
     }
 }

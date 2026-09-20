@@ -41,5 +41,11 @@ $frustration = $response->score('frustration');
 printf("Frustration: %.2f of %d (confidence %.2f)\n", $frustration->score, count($frustration->legend) - 1, $frustration->confidence);
 
 foreach ($frustration->legend as $level => $description) {
-    printf("  %d %-12s %.2f\n", $level, $description, $frustration->probabilities[$level]);
+    // A level comes back as it was sent, so it is text here but can be structured JSON
+    printf(
+        "  %d %-12s %.2f\n",
+        $level,
+        is_string($description) ? $description : json_encode($description),
+        $frustration->probabilities[$level],
+    );
 }
