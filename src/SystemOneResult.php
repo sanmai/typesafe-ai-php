@@ -65,11 +65,24 @@ class SystemOneResult
     }
 
     /**
+     * Fills a result class with the answers to the questions its attributes declare.
+     *
+     * @template TResult of object
+     * @param class-string<TResult> $class
+     * @return TResult
+     * @see Schema
+     */
+    public function as(string $class): object
+    {
+        return (new Schema($class))->hydrate($this);
+    }
+
+    /**
      * @template T of Answer
      * @param class-string<T> $type
      * @return T
      */
-    private function answer(string $id, string $type): Answer
+    public function answer(string $id, string $type): Answer
     {
         $answer = $this->answers[$id] ?? null;
 

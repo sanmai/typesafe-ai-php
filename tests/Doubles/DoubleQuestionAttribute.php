@@ -17,30 +17,16 @@
  * limitations under the License.
  */
 
-declare(strict_types=1);
+namespace Tests\TypeSafeAI\Doubles;
 
-namespace TypeSafeAI\Question;
+use TypeSafeAI\DTO\NoulAnswer;
+use TypeSafeAI\Question\Noul;
 
-use Attribute;
-use JMS\Serializer\Annotation\Type;
-
-/**
- * Picks one option from the set you define.
- *
- * @phpstan-import-type EntryType from Question
- */
-#[Attribute(Attribute::TARGET_PARAMETER)]
-class Choice implements Question
+class DoubleQuestionAttribute
 {
-    public string $type = 'choice';
-
-    /**
-     * @param EntryType $instructions
-     * @param array<array-key, EntryType> $criteria Options mapped to their descriptions; null when an option needs no description.
-     */
     public function __construct(
-        public string|array|object|null $instructions = null,
-        #[Type('array<string, union>')]
-        public array $criteria = [],
+        #[Noul('Does this convey urgency?')]
+        #[Noul('Asked twice?')]
+        public readonly NoulAnswer $is_urgent,
     ) {}
 }

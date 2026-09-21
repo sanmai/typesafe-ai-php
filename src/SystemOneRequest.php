@@ -69,6 +69,23 @@ class SystemOneRequest
     }
 
     /**
+     * Asks every question that the attributes on a result class declare.
+     *
+     * Read the answers back with SystemOneResult::as($class).
+     *
+     * @param class-string $class A class whose constructor parameters carry question attributes.
+     * @see Schema
+     */
+    public function askFor(string $class): self
+    {
+        foreach ((new Schema($class))->questions as $id => $question) {
+            $this->ask($id, $question);
+        }
+
+        return $this;
+    }
+
+    /**
      * @param EntryType $instructions
      * @param EntryType $true
      * @param EntryType $false
