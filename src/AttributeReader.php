@@ -47,6 +47,7 @@ use function sprintf;
  *
  * @template T of object
  * @template-implements IteratorAggregate<string, Question>
+ * @final
  */
 class AttributeReader implements IteratorAggregate
 {
