@@ -22,7 +22,12 @@ declare(strict_types=1);
 namespace Tests\TypeSafeAI;
 
 use InvalidArgumentException;
+use PHPUnit\Framework\MockObject\MockObject;
+use ReflectionAttribute;
 use ReflectionClass;
+use ReflectionMethod;
+use ReflectionNamedType;
+use ReflectionParameter;
 use Tests\TypeSafeAI\Doubles\DoubleQuestionAttribute;
 use Tests\TypeSafeAI\Doubles\MissingQuestionAttribute;
 use Tests\TypeSafeAI\Doubles\NoQuestions;
@@ -30,6 +35,7 @@ use Tests\TypeSafeAI\Doubles\TicketDecision;
 use Tests\TypeSafeAI\Doubles\UntypedAnswer;
 use Tests\TypeSafeAI\Doubles\WrongAnswerType;
 use TypeSafeAI\DTO\Answer;
+use TypeSafeAI\DTO\NoulAnswer;
 use TypeSafeAI\Question\Choice;
 use TypeSafeAI\Question\Noul;
 use TypeSafeAI\Question\Score;
@@ -46,6 +52,64 @@ use function sprintf;
  */
 class AttributeReaderTest extends TestCase
 {
+    public function testConstructorReadsNothing(): void
+    {
+        $reflection = $this->createMock(ReflectionClass::class);
+        $reflection->expects($this->never())->method($this->anything());
+
+        new AttributeReader($reflection);
+    }
+
+    public function testQuestionsDoNotReadTheAnswerType(): void
+    {
+        $attribute = $this->createMock(ReflectionAttribute::class);
+        $attribute->method('newInstance')->willReturn(new Noul());
+
+        $parameter = $this->createMock(ReflectionParameter::class);
+        $parameter->method('getName')->willReturn('is_urgent');
+        $parameter->method('getAttributes')->willReturn([$attribute]);
+        $parameter->expects($this->never())->method('getType');
+
+        $reader = new AttributeReader($this->constructorOf($parameter));
+
+        $this->assertSame(['is_urgent'], array_keys(iterator_to_array($reader)));
+    }
+
+    public function testHydrationDoesNotReadTheQuestions(): void
+    {
+        $type = $this->createMock(ReflectionNamedType::class);
+        $type->method('getName')->willReturn(NoulAnswer::class);
+
+        $parameter = $this->createMock(ReflectionParameter::class);
+        $parameter->method('getName')->willReturn('is_urgent');
+        $parameter->method('getType')->willReturn($type);
+        $parameter->expects($this->never())->method('getAttributes');
+
+        $reflection = $this->constructorOf($parameter);
+        $reflection->expects($this->once())
+            ->method('newInstance')
+            ->with($this->isInstanceOf(NoulAnswer::class))
+            ->willReturn(new NoQuestions());
+
+        $result = $this->deserializeFile(__DIR__ . '/data/evaluation_mixed.json', SystemOneResult::class);
+
+        $this->assertInstanceOf(NoQuestions::class, (new AttributeReader($reflection))->hydrate($result));
+    }
+
+    /**
+     * @return ReflectionClass<object>&MockObject
+     */
+    private function constructorOf(ReflectionParameter $parameter): ReflectionClass
+    {
+        $constructor = $this->createMock(ReflectionMethod::class);
+        $constructor->method('getParameters')->willReturn([$parameter]);
+
+        $reflection = $this->createMock(ReflectionClass::class);
+        $reflection->method('getConstructor')->willReturn($constructor);
+
+        return $reflection;
+    }
+
     public function testQuestions(): void
     {
         $questions = iterator_to_array(new AttributeReader(new ReflectionClass(TicketDecision::class)));
