@@ -35,6 +35,7 @@ The API key is optional: without one the client reads `TYPESAFE_API_KEY`, and th
 ```php
 $client = TypeSafeClient::createInstance();
 ```
+
 ### Using Result Classes
 
 Annotate any class with attributes, add `Answer` subclasses as parameter types, fire up `evaluate()` that will send the question, and return an instance of the class with all parameters assigned their respective answers. This is the recommended way to use the SDK.
@@ -73,7 +74,7 @@ For the token counts, the resolved model version, or a different model, send a `
 There are three question types:
 
 - **Noul** is a yes/no question. The answer is the probability of yes, from 0 to 1.
-- **Choice** picks one option from the set. Each option can have an optional a description.
+- **Choice** picks one option from the set. Each option can have an optional description.
 - **Score** evaluates the state against the ordered levels, from the lowest to the highest.
 
 ```php
@@ -130,11 +131,11 @@ $request = new SystemOneRequest($state, questions: [
 ]);
 ```
 
-Requests uses the `jev-latest` model by default; to use a different model, provide it as the second argument to `build()` or the constructor.
+Requests use the `jev-latest` model by default; to use a different model, provide it as the second argument to `build()` or the constructor.
 
 ### Reading Answers
 
-Each answer type has its own accessor, so IDE will tip you on the available fields:
+Each answer type has its own accessor, so the IDE will tip you on the available fields:
 
 ```php
 $urgent = $response->noul('is_urgent');
@@ -179,7 +180,7 @@ foreach ($client->models()->models as $model) {
 
 `SystemOneRequest::ask()` extends the request with any object that implements the `TypeSafeAI\Question\Question` marker interface. The `noul()`, `choice()`, and `score()` methods are shortcuts for `ask()` with the bundled `Noul`, `Choice`, and `Score` classes.
 
-Questions are plain data objects. The client serializes their properties to JSON, together null values too.
+Questions are plain data objects. The client serializes their properties to JSON, null values included.
 
 ## Examples
 
@@ -193,7 +194,7 @@ TYPESAFE_API_KEY=your-api-key php examples/urgency.php
 - [routing.php](examples/routing.php): a choice between teams, with the probability of each option.
 - [frustration.php](examples/frustration.php): a score along ordered levels.
 - [chat-log.php](examples/chat-log.php): questions of all three types about a chat log, in one request.
-- [attributes.php](examples/attributes.php): a result declaring own questions using attributes.
+- [attributes.php](examples/attributes.php): a result declaring its own questions using attributes.
 - [errors.php](examples/errors.php): an invalid request, and the validation error as returned by the API.
 
 ## Errors and Retries
