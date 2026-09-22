@@ -170,10 +170,10 @@ class TypeSafeClient
      * @param class-string<TResult> $class
      * @return TResult
      */
-    public function evaluate(string|array|object $state, string $class): object
+    public function evaluate(string|array|object $state, string $class, string $model = SystemOneRequest::MODEL_LATEST): object
     {
         $reader = new AttributeReader(new ReflectionClass($class));
-        $request = new SystemOneRequest($state, questions: [...$reader->questions()]);
+        $request = new SystemOneRequest($state, $model, [...$reader->questions()]);
 
         return $reader->hydrate($this->systemOne($request));
     }

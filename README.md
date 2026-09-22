@@ -67,7 +67,13 @@ $decision->is_urgent->noul;      // 0.95
 $decision->department->choice;   // 'billing'
 ```
 
-For the token counts, the resolved model version, or a different model, send a `SystemOneRequest` with `systemOne()` as in the examples below.
+Provide the third argument to select the model:
+
+```php
+$decision = $client->evaluate($ticket, TicketDecision::class, 'jev-preview');
+```
+
+For the token counts or the resolved model version, send a `SystemOneRequest` with `systemOne()` as in the examples below.
 
 ### Custom Requests
 

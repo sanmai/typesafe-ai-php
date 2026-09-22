@@ -120,12 +120,23 @@ class TypeSafeClientTest extends TestCase
         );
     }
 
-    public function testEvaluate(): void
+    public static function provideEvaluatedModels(): iterable
+    {
+        yield 'default model' => [[], SystemOneRequest::MODEL_LATEST];
+
+        yield 'explicit model' => [['model' => 'jev-preview'], 'jev-preview'];
+    }
+
+    /**
+     * @dataProvider provideEvaluatedModels
+     * @param array<string, string> $arguments
+     */
+    public function testEvaluate(array $arguments, string $expectedModel): void
     {
         $state = ['message' => 'Help! My payouts have been failing for 3 days.'];
         $response = $this->deserializeFile(__DIR__ . '/data/evaluation_mixed.json', SystemOneResult::class);
 
-        $expected = SystemOneRequest::build($state)
+        $expected = SystemOneRequest::build($state, $expectedModel)
             ->noul('is_urgent', 'Does this convey urgency?', 'Explicitly time-sensitive', 'No urgency expressed')
             ->choice('department', 'Which team should handle this?', [
                 'billing' => 'Payments, invoicing, refunds',
@@ -140,7 +151,7 @@ class TypeSafeClientTest extends TestCase
             ->with($this->equalTo($expected))
             ->willReturn($response);
 
-        $decision = $client->evaluate($state, TicketDecision::class);
+        $decision = $client->evaluate($state, TicketDecision::class, ...$arguments);
 
         $this->assertSame(0.92, $decision->is_urgent->noul);
         $this->assertSame('technical', $decision->department->choice);
