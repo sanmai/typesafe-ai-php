@@ -19,7 +19,7 @@
 
 declare(strict_types=1);
 
-// A result class that declares its own questions, and comes back with the answers in it.
+// A result class that declares its own questions, populated with a typed result for each one.
 //
 // Run: TYPESAFE_API_KEY=your-api-key php examples/attributes.php
 
