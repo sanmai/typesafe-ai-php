@@ -40,8 +40,10 @@ use function sprintf;
 /**
  * Parses the questions and answer types from the annotated constructor.
  *
- * We assume that each parameter needs exactly one question attribute. The parameter name is the question id, and the
- * parameter type is the expected type of the answer.
+ * We assume that
+ * - each parameter needs exactly one question attribute
+ * - the parameter name is the question id, and
+ * - the parameter type is the expected type of the answer
  *
  * @template T of object
  * @template-implements IteratorAggregate<string, Question>
