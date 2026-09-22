@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace TypeSafeAI;
 
 use JMS\Serializer\Annotation\Type;
+use ReflectionClass;
 use TypeSafeAI\DTO\Answer;
 use TypeSafeAI\DTO\ChoiceAnswer;
 use TypeSafeAI\DTO\NoulAnswer;
@@ -69,7 +70,7 @@ class SystemOneResult
      */
     public function as(string $class): object
     {
-        return (new AttributeReader($class))->hydrate($this);
+        return AttributeReader::build(new ReflectionClass($class))->hydrate($this);
     }
 
     /**

@@ -47,7 +47,7 @@ class AttributeReaderTest extends TestCase
 {
     public function testQuestions(): void
     {
-        $questions = iterator_to_array(new AttributeReader(TicketDecision::class));
+        $questions = iterator_to_array(new AttributeReader(new ReflectionClass(TicketDecision::class)));
 
         $this->assertSame(['is_urgent', 'department', 'frustration'], array_keys($questions));
         $this->assertInstanceOf(Noul::class, $questions['is_urgent']);
@@ -57,7 +57,7 @@ class AttributeReaderTest extends TestCase
 
     public function testQuestionArguments(): void
     {
-        $question = iterator_to_array(new AttributeReader(TicketDecision::class))['is_urgent'];
+        $question = iterator_to_array(new AttributeReader(new ReflectionClass(TicketDecision::class)))['is_urgent'];
 
         $this->assertSame('Does this convey urgency?', $question->instructions);
         $this->assertSame('Explicitly time-sensitive', $question->criteria->true);
@@ -65,14 +65,14 @@ class AttributeReaderTest extends TestCase
 
     public function testNoConstructor(): void
     {
-        $this->assertSame([], iterator_to_array((new AttributeReader(NoQuestions::class))));
+        $this->assertSame([], iterator_to_array((new AttributeReader(new ReflectionClass(NoQuestions::class)))));
     }
 
     public function testHydrate(): void
     {
         $result = $this->deserializeFile(__DIR__ . '/data/evaluation_mixed.json', SystemOneResult::class);
 
-        $decision = (new AttributeReader(TicketDecision::class))->hydrate($result);
+        $decision = AttributeReader::build(new ReflectionClass(TicketDecision::class))->hydrate($result);
 
         $this->assertSame(0.92, $decision->is_urgent->noul);
         $this->assertSame('technical', $decision->department->choice);

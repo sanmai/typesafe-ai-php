@@ -31,7 +31,6 @@ use ReflectionParameter;
 use Traversable;
 use TypeSafeAI\DTO\Answer;
 use TypeSafeAI\Question\Question;
-use ReflectionException;
 
 use function count;
 use function is_subclass_of;
@@ -62,25 +61,26 @@ class AttributeReader implements IteratorAggregate
     private array $answers = [];
 
     /**
-     * @var ReflectionClass<T>
+     * @param ReflectionClass<T> $reflection
+     * @throws InvalidArgumentException
      */
-    private readonly ReflectionClass $reflection;
-
-    /**
-     * @param class-string<T>|ReflectionClass<T> $classNameOrReflectionClass
-     * @throws InvalidArgumentException|ReflectionException
-     */
-    public function __construct(string|ReflectionClass $classNameOrReflectionClass)
+    public function __construct(private readonly ReflectionClass $reflection)
     {
-        $this->reflection = match ($classNameOrReflectionClass instanceof ReflectionClass) {
-            true => $classNameOrReflectionClass,
-            false => new ReflectionClass($classNameOrReflectionClass),
-        };
-
         foreach ($this->reflection->getConstructor()?->getParameters() ?? [] as $parameter) {
             $this->questions[$parameter->getName()] = self::questionInstance($parameter);
             $this->answers[$parameter->getName()] = self::answerTypeName($parameter);
         }
+    }
+
+    /**
+     * Same as the constructor, for method chaining convenience.
+     *
+     * @param ReflectionClass<T> $reflection
+     * @throws InvalidArgumentException
+     */
+    public static function build(ReflectionClass $reflection): self
+    {
+        return new self($reflection);
     }
 
     /**

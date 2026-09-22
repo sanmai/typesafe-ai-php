@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace TypeSafeAI;
 
 use JMS\Serializer\Annotation\Type;
+use ReflectionClass;
 use TypeSafeAI\Question\Choice;
 use TypeSafeAI\Question\Noul;
 use TypeSafeAI\Question\NoulCriteria;
@@ -72,7 +73,7 @@ class SystemOneRequest
      */
     public function askFor(string $class): self
     {
-        foreach (new AttributeReader($class) as $id => $question) {
+        foreach (new AttributeReader(new ReflectionClass($class)) as $id => $question) {
             $this->ask($id, $question);
         }
 
