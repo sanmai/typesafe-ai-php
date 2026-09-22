@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace TypeSafeAI\Question;
 
+use Attribute;
 use JMS\Serializer\Annotation\Type;
 
 /**
@@ -28,6 +29,7 @@ use JMS\Serializer\Annotation\Type;
  *
  * @phpstan-import-type EntryType from Question
  */
+#[Attribute(Attribute::TARGET_PARAMETER)]
 class Choice implements Question
 {
     public string $type = 'choice';

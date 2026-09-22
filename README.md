@@ -41,8 +41,8 @@ $client = TypeSafeClient::createInstance();
 There are three question types:
 
 - **Noul** is a yes/no question. The answer is the probability of yes, from 0 to 1.
-- **Choice** picks one option from the set. Each option can have an optional a description.
-- **Score** evaluates the state against the ordered levels, from the lowest to the highest.
+- **Choice** picks one option from the set you define. Give each option a description, or `null` when it needs none.
+- **Score** rates the state with the ordered levels, from the lowest to the highest.
 
 ```php
 use TypeSafeAI\SystemOneRequest;
@@ -153,7 +153,7 @@ Questions are plain data objects. The client serializes their properties to JSON
 
 ## Examples
 
-Check out the [examples](examples/) directory. Examples use the API key from the `TYPESAFE_API_KEY` environment variable:
+Check out the [examples](examples/) directory. Examples read the API key from the `TYPESAFE_API_KEY` environment variable:
 
 ```bash
 TYPESAFE_API_KEY=your-api-key php examples/urgency.php
