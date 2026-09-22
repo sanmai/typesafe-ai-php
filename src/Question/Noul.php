@@ -21,7 +21,6 @@ declare(strict_types=1);
 
 namespace TypeSafeAI\Question;
 
-use Attribute;
 use JMS\Serializer\Annotation\SkipWhenEmpty;
 
 /**
@@ -29,7 +28,6 @@ use JMS\Serializer\Annotation\SkipWhenEmpty;
  *
  * @phpstan-import-type EntryType from Question
  */
-#[Attribute(Attribute::TARGET_PARAMETER)]
 class Noul implements Question
 {
     public string $type = 'noul';
