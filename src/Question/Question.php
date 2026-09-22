@@ -21,9 +21,4 @@ declare(strict_types=1);
 
 namespace TypeSafeAI\Question;
 
-/**
- * A typed question. The client serializes its public properties, null values included.
- *
- * @see \TypeSafeAI\SystemOneRequest
- */
 interface Question {}
