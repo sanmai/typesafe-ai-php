@@ -25,8 +25,6 @@ use Attribute;
 use JMS\Serializer\Annotation\Type;
 
 /**
- * Rates the state with the ordered levels as defined.
- *
  * @phpstan-import-type EntryType from Question
  */
 #[Attribute(Attribute::TARGET_PARAMETER)]

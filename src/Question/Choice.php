@@ -25,7 +25,7 @@ use Attribute;
 use JMS\Serializer\Annotation\Type;
 
 /**
- * Picks one option from the set you define.
+ * Selects one option from the set.
  *
  * @phpstan-import-type EntryType from Question
  */
