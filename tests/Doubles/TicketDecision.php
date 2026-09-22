@@ -28,7 +28,7 @@ use TypeSafeAI\Question\NoulCriteria;
 use TypeSafeAI\Question\Score;
 
 /**
- * The ids match the answers in tests/data/evaluation_mixed.json.
+ * @see tests/data/evaluation_mixed.json
  */
 class TicketDecision
 {
