@@ -22,12 +22,10 @@ declare(strict_types=1);
 namespace TypeSafeAI;
 
 use InvalidArgumentException;
-use IteratorAggregate;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
-use Traversable;
 use TypeSafeAI\DTO\Answer;
 use TypeSafeAI\Question\Question;
 
@@ -44,10 +42,9 @@ use function sprintf;
  * - the parameter type is the expected type of the answer
  *
  * @template T of object
- * @template-implements IteratorAggregate<string, Question>
  * @final
  */
-class AttributeReader implements IteratorAggregate
+class AttributeReader
 {
     /**
      * @param ReflectionClass<T> $reflection
@@ -62,7 +59,10 @@ class AttributeReader implements IteratorAggregate
         return $this->reflection->getConstructor()?->getParameters() ?? [];
     }
 
-    public function getIterator(): Traversable
+    /**
+     * @return iterable<string, Question>
+     */
+    public function questions(): iterable
     {
         foreach ($this->getParameters() as $parameter) {
             yield $parameter->getName() => self::questionInstance($parameter);

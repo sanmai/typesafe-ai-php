@@ -72,7 +72,7 @@ class AttributeReaderTest extends TestCase
 
         $reader = new AttributeReader($this->constructorOf($parameter));
 
-        $this->assertSame(['is_urgent'], array_keys(iterator_to_array($reader)));
+        $this->assertSame(['is_urgent'], array_keys(iterator_to_array($reader->questions())));
     }
 
     public function testHydrationDoesNotReadTheQuestions(): void
@@ -112,7 +112,8 @@ class AttributeReaderTest extends TestCase
 
     public function testQuestions(): void
     {
-        $questions = iterator_to_array(new AttributeReader(new ReflectionClass(TicketDecision::class)));
+        $reader = new AttributeReader(new ReflectionClass(TicketDecision::class));
+        $questions = iterator_to_array($reader->questions());
 
         $this->assertSame(['is_urgent', 'department', 'frustration'], array_keys($questions));
         $this->assertInstanceOf(Noul::class, $questions['is_urgent']);
@@ -122,7 +123,8 @@ class AttributeReaderTest extends TestCase
 
     public function testQuestionArguments(): void
     {
-        $question = iterator_to_array(new AttributeReader(new ReflectionClass(TicketDecision::class)))['is_urgent'];
+        $reader = new AttributeReader(new ReflectionClass(TicketDecision::class));
+        $question = [...$reader->questions()]['is_urgent'];
 
         $this->assertSame('Does this convey urgency?', $question->instructions);
         $this->assertSame('Explicitly time-sensitive', $question->criteria->true);
@@ -133,7 +135,7 @@ class AttributeReaderTest extends TestCase
         $reader = new AttributeReader(new ReflectionClass(NoQuestions::class));
 
         $this->assertInstanceOf(NoQuestions::class, $reader->hydrate(new SystemOneResult()));
-        $this->assertSame([], iterator_to_array($reader));
+        $this->assertSame([], [...$reader->questions()]);
     }
 
     public function testHydrate(): void
@@ -166,7 +168,7 @@ class AttributeReaderTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage($message);
 
-        iterator_count($reader);
+        iterator_count($reader->questions());
         $reader->hydrate(new SystemOneResult());
     }
 }

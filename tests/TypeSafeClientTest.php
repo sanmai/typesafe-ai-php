@@ -125,15 +125,23 @@ class TypeSafeClientTest extends TestCase
         $state = ['message' => 'Help! My payouts have been failing for 3 days.'];
         $response = $this->deserializeFile(__DIR__ . '/data/evaluation_mixed.json', SystemOneResult::class);
 
+        $expected = SystemOneRequest::build($state)
+            ->noul('is_urgent', 'Does this convey urgency?', 'Explicitly time-sensitive', 'No urgency expressed')
+            ->choice('department', 'Which team should handle this?', [
+                'billing' => 'Payments, invoicing, refunds',
+                'technical' => 'Bugs, outages, integrations',
+                'sales' => null,
+            ])
+            ->score('frustration', 'How frustrated is the customer?', ['Calm', 'Frustrated', 'Very angry']);
+
         $client = $this->createPartialMock(TypeSafeClient::class, ['systemOne']);
         $client->expects($this->once())
             ->method('systemOne')
-            ->with($this->equalTo(SystemOneRequest::build($state)->questionsFrom(TicketDecision::class)))
+            ->with($this->equalTo($expected))
             ->willReturn($response);
 
         $decision = $client->evaluate($state, TicketDecision::class);
 
-        $this->assertInstanceOf(TicketDecision::class, $decision);
         $this->assertSame(0.92, $decision->is_urgent->noul);
         $this->assertSame('technical', $decision->department->choice);
         $this->assertSame(1.6, $decision->frustration->score);

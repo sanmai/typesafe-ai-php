@@ -38,7 +38,6 @@ use ReflectionClass;
 
 use function array_merge;
 use function getenv;
-use function iterator_to_array;
 use function range;
 use function sprintf;
 
@@ -172,7 +171,7 @@ class TypeSafeClient
     public function evaluate(string|array|object $state, string $class): object
     {
         $reader = new AttributeReader(new ReflectionClass($class));
-        $request = new SystemOneRequest($state, questions: iterator_to_array($reader));
+        $request = new SystemOneRequest($state, questions: [...$reader->questions()]);
 
         return $reader->hydrate($this->systemOne($request));
     }
