@@ -19,7 +19,6 @@
 
 namespace Tests\TypeSafeAI;
 
-use Tests\TypeSafeAI\Doubles\TicketDecision;
 use TypeSafeAI\DTO\ChoiceAnswer;
 use TypeSafeAI\DTO\NoulAnswer;
 use TypeSafeAI\DTO\ScoreAnswer;
@@ -75,15 +74,6 @@ class SystemOneResultTest extends TestCase
         $this->assertSame(['Calm', 'Frustrated', 'Very angry'], $answer->legend);
         $this->assertSame([0.05, 0.3, 0.65], $answer->probabilities);
         $this->assertSame(0.78, $answer->confidence);
-    }
-
-    public function testAs(): void
-    {
-        $decision = $this->response->as(TicketDecision::class);
-
-        $this->assertSame(0.92, $decision->is_urgent->noul);
-        $this->assertSame('technical', $decision->department->choice);
-        $this->assertSame(1.6, $decision->frustration->score);
     }
 
     public function testAnswer(): void

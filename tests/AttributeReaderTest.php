@@ -130,7 +130,7 @@ class AttributeReaderTest extends TestCase
 
     public function testNoConstructor(): void
     {
-        $reader = AttributeReader::build(new ReflectionClass(NoQuestions::class));
+        $reader = new AttributeReader(new ReflectionClass(NoQuestions::class));
 
         $this->assertInstanceOf(NoQuestions::class, $reader->hydrate(new SystemOneResult()));
         $this->assertSame([], iterator_to_array($reader));
@@ -140,7 +140,7 @@ class AttributeReaderTest extends TestCase
     {
         $result = $this->deserializeFile(__DIR__ . '/data/evaluation_mixed.json', SystemOneResult::class);
 
-        $decision = AttributeReader::build(new ReflectionClass(TicketDecision::class))->hydrate($result);
+        $decision = (new AttributeReader(new ReflectionClass(TicketDecision::class)))->hydrate($result);
 
         $this->assertSame(0.92, $decision->is_urgent->noul);
         $this->assertSame('technical', $decision->department->choice);

@@ -22,7 +22,6 @@ declare(strict_types=1);
 namespace TypeSafeAI;
 
 use JMS\Serializer\Annotation\Type;
-use ReflectionClass;
 use TypeSafeAI\Question\Choice;
 use TypeSafeAI\Question\Noul;
 use TypeSafeAI\Question\NoulCriteria;
@@ -60,23 +59,6 @@ class SystemOneRequest
     public function ask(string $id, Question $question): self
     {
         $this->questions[$id] = $question;
-
-        return $this;
-    }
-
-    /**
-     * Infer questions using attributes of the provided class.
-     *
-     * @see SystemOneResult::as($class).
-     * @param class-string $class
-     * @see AttributeReader
-     * @internal
-     */
-    public function questionsFrom(string $class): self
-    {
-        foreach (new AttributeReader(new ReflectionClass($class)) as $id => $question) {
-            $this->ask($id, $question);
-        }
 
         return $this;
     }

@@ -34,9 +34,11 @@ use InvalidArgumentException;
 use JSONSerializer\Contracts\JsonDeserializer;
 use JSONSerializer\Serializer;
 use Psr\Log\LoggerInterface;
+use ReflectionClass;
 
 use function array_merge;
 use function getenv;
+use function iterator_to_array;
 use function range;
 use function sprintf;
 
@@ -169,9 +171,10 @@ class TypeSafeClient
      */
     public function evaluate(string|array|object $state, string $class): object
     {
-        $request = SystemOneRequest::build($state)->questionsFrom($class);
+        $reader = new AttributeReader(new ReflectionClass($class));
+        $request = new SystemOneRequest($state, questions: iterator_to_array($reader));
 
-        return $this->systemOne($request)->as($class);
+        return $reader->hydrate($this->systemOne($request));
     }
 
     /**

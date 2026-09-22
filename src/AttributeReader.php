@@ -55,18 +55,6 @@ class AttributeReader implements IteratorAggregate
     public function __construct(private readonly ReflectionClass $reflection) {}
 
     /**
-     * Same as the constructor, for method chaining convenience.
-     *
-     * @template TB of object
-     * @param ReflectionClass<TB> $reflection
-     * @return self<TB>
-     */
-    public static function build(ReflectionClass $reflection): self
-    {
-        return new self($reflection);
-    }
-
-    /**
      * @return iterable<ReflectionParameter>
      */
     private function getParameters(): iterable
