@@ -22,7 +22,6 @@ declare(strict_types=1);
 namespace TypeSafeAI;
 
 use JMS\Serializer\Annotation\Type;
-use ReflectionClass;
 use TypeSafeAI\DTO\Answer;
 use TypeSafeAI\DTO\ChoiceAnswer;
 use TypeSafeAI\DTO\NoulAnswer;
@@ -58,19 +57,6 @@ class SystemOneResult
     public function score(string $id): ScoreAnswer
     {
         return $this->answer($id, ScoreAnswer::class);
-    }
-
-    /**
-     * Hydrates a result class using attributes.
-     *
-     * @template TResult of object
-     * @param class-string<TResult> $class
-     * @return TResult
-     * @see AttributeReader
-     */
-    public function as(string $class): object
-    {
-        return AttributeReader::build(new ReflectionClass($class))->hydrate($this);
     }
 
     /**

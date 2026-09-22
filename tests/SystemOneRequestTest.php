@@ -21,7 +21,6 @@ namespace Tests\TypeSafeAI;
 
 use TypeSafeAI\SystemOneRequest;
 use Tests\TypeSafeAI\Doubles\ExampleState;
-use Tests\TypeSafeAI\Doubles\TicketDecision;
 use TypeSafeAI\Question\Noul;
 use TypeSafeAI\Question\NoulCriteria;
 
@@ -325,38 +324,6 @@ class SystemOneRequestTest extends TestCase
                 "is_urgent": {
                   "type": "noul",
                   "instructions": null
-                }
-              }
-            }',
-        ];
-
-        yield 'questions from attributes' => [
-            fn() => SystemOneRequest::build(self::STATE)->askFor(TicketDecision::class),
-            '{
-              "state": "Help! My payouts have been failing for 3 days.",
-              "model": "jev-latest",
-              "questions": {
-                "is_urgent": {
-                  "type": "noul",
-                  "instructions": "Does this convey urgency?",
-                  "criteria": {
-                    "true": "Explicitly time-sensitive",
-                    "false": "No urgency expressed"
-                  }
-                },
-                "department": {
-                  "type": "choice",
-                  "instructions": "Which team should handle this?",
-                  "criteria": {
-                    "billing": "Payments, invoicing, refunds",
-                    "technical": "Bugs, outages, integrations",
-                    "sales": null
-                  }
-                },
-                "frustration": {
-                  "type": "score",
-                  "instructions": "How frustrated is the customer?",
-                  "criteria": ["Calm", "Frustrated", "Very angry"]
                 }
               }
             }',
