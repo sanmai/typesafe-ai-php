@@ -70,6 +70,7 @@ class SystemOneRequest
      * @see SystemOneResult::as($class).
      * @param class-string $class
      * @see AttributeReader
+     * @internal
      */
     public function questionsFrom(string $class): self
     {

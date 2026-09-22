@@ -160,6 +160,21 @@ class TypeSafeClient
     }
 
     /**
+     * Evaluates the questions declared by a class and returns an instance with the answers.
+     *
+     * @template TResult of object
+     * @param string|array<mixed>|object $state
+     * @param class-string<TResult> $class
+     * @return TResult
+     */
+    public function evaluate(string|array|object $state, string $class): object
+    {
+        $request = SystemOneRequest::build($state)->questionsFrom($class);
+
+        return $this->systemOne($request)->as($class);
+    }
+
+    /**
      * Lists the models available to the account.
      *
      * @throws GuzzleException On 401 (bad API key), or when rate limited

@@ -67,6 +67,7 @@ class SystemOneResult
      * @param class-string<TResult> $class
      * @return TResult
      * @see AttributeReader
+     * @internal
      */
     public function as(string $class): object
     {
