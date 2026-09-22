@@ -20,9 +20,10 @@
 namespace Tests\TypeSafeAI\Doubles;
 
 use JsonSerializable;
+use BadMethodCallException;
 
 /**
- * The client serializes user objects by their properties; JsonSerializable is not used.
+ * Used to validate that JsonSerializable is unused.
  */
 class ExampleState implements JsonSerializable
 {
@@ -34,6 +35,6 @@ class ExampleState implements JsonSerializable
 
     public function jsonSerialize(): mixed
     {
-        return 'not used';
+        throw new BadMethodCallException();
     }
 }
