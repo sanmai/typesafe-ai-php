@@ -55,7 +55,7 @@ class AttributeReaderTest extends TestCase
 
     public function testQuestionArguments(): void
     {
-        $question = iterator_to_array((new AttributeReader(TicketDecision::class)))['is_urgent'];
+        $question = iterator_to_array(new AttributeReader(TicketDecision::class))['is_urgent'];
 
         $this->assertSame('Does this convey urgency?', $question->instructions);
         $this->assertSame('Explicitly time-sensitive', $question->criteria->true);

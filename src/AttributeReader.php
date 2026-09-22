@@ -59,13 +59,12 @@ class AttributeReader implements IteratorAggregate
     private array $answers = [];
 
     /**
-     * @param class-string<T> $class
-     * @param null|ReflectionClass<T> $reflection
+     * @param class-string<T> $className
      * @throws InvalidArgumentException|ReflectionException
      */
-    public function __construct(private readonly string $class, ?ReflectionClass $reflection = null)
+    public function __construct(private readonly string $className)
     {
-        $reflection ??= new ReflectionClass($class);
+        $reflection = new ReflectionClass($className);
 
         foreach ($reflection->getConstructor()?->getParameters() ?? [] as $parameter) {
             $this->questions[$parameter->getName()] = self::questionInstance($parameter);
@@ -86,7 +85,7 @@ class AttributeReader implements IteratorAggregate
             $arguments[$id] = $result->answer($id, $type);
         }
 
-        return new $this->class(...$arguments);
+        return new $this->className(...$arguments);
     }
 
     private static function questionInstance(ReflectionParameter $parameter): Question
