@@ -163,6 +163,7 @@ TYPESAFE_API_KEY=your-api-key php examples/urgency.php
 - [routing.php](examples/routing.php): a choice between teams, with the probability of each option.
 - [frustration.php](examples/frustration.php): a score along ordered levels.
 - [chat-log.php](examples/chat-log.php): questions of all three types about a chat log, in one request.
+- [attributes.php](examples/attributes.php): a result declaring own questions using attributes.
 - [errors.php](examples/errors.php): an invalid request, and the validation error as returned by the API.
 
 ## Errors and Retries

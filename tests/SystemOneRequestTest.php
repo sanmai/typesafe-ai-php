@@ -331,7 +331,7 @@ class SystemOneRequestTest extends TestCase
         ];
 
         yield 'questions from attributes' => [
-            fn() => SystemOneRequest::build(self::STATE)->askFor(TicketDecision::class),
+            fn() => SystemOneRequest::build(self::STATE)->questionsFrom(TicketDecision::class),
             '{
               "state": "Help! My payouts have been failing for 3 days.",
               "model": "jev-latest",
