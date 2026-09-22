@@ -70,11 +70,11 @@ class SystemOneResult
      * @template TResult of object
      * @param class-string<TResult> $class
      * @return TResult
-     * @see Schema
+     * @see AttributeReader
      */
     public function as(string $class): object
     {
-        return (new Schema($class))->hydrate($this);
+        return (new AttributeReader($class))->hydrate($this);
     }
 
     /**

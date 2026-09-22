@@ -26,6 +26,9 @@ use function basename;
 use function glob;
 use function str_starts_with;
 
+/**
+ * @coversNothing
+ */
 class SerializationTest extends TestCase
 {
     private const PREFIX_CLASS_MAP = [

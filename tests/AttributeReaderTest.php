@@ -32,19 +32,19 @@ use TypeSafeAI\DTO\Answer;
 use TypeSafeAI\Question\Choice;
 use TypeSafeAI\Question\Noul;
 use TypeSafeAI\Question\Score;
-use TypeSafeAI\Schema;
+use TypeSafeAI\AttributeReader;
 use TypeSafeAI\SystemOneResult;
 
 use function array_keys;
 
 /**
- * @covers \TypeSafeAI\Schema
+ * @covers \TypeSafeAI\AttributeReader
  */
-class SchemaTest extends TestCase
+class AttributeReaderTest extends TestCase
 {
     public function testQuestions(): void
     {
-        $questions = (new Schema(TicketDecision::class))->questions;
+        $questions = (new AttributeReader(TicketDecision::class))->questions;
 
         $this->assertSame(['is_urgent', 'department', 'frustration'], array_keys($questions));
         $this->assertInstanceOf(Noul::class, $questions['is_urgent']);
@@ -54,7 +54,7 @@ class SchemaTest extends TestCase
 
     public function testQuestionArguments(): void
     {
-        $question = (new Schema(TicketDecision::class))->questions['is_urgent'];
+        $question = (new AttributeReader(TicketDecision::class))->questions['is_urgent'];
 
         $this->assertSame('Does this convey urgency?', $question->instructions);
         $this->assertSame('Explicitly time-sensitive', $question->criteria->true);
@@ -62,14 +62,14 @@ class SchemaTest extends TestCase
 
     public function testNoConstructor(): void
     {
-        $this->assertSame([], (new Schema(NoQuestions::class))->questions);
+        $this->assertSame([], (new AttributeReader(NoQuestions::class))->questions);
     }
 
     public function testHydrate(): void
     {
         $result = $this->deserializeFile(__DIR__ . '/data/evaluation_mixed.json', SystemOneResult::class);
 
-        $decision = (new Schema(TicketDecision::class))->hydrate($result);
+        $decision = (new AttributeReader(TicketDecision::class))->hydrate($result);
 
         $this->assertSame(0.92, $decision->is_urgent->noul);
         $this->assertSame('technical', $decision->department->choice);
@@ -93,6 +93,6 @@ class SchemaTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage($message);
 
-        new Schema($class);
+        new AttributeReader($class);
     }
 }

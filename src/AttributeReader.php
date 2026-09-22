@@ -42,34 +42,32 @@ use function sprintf;
  *
  * @template T of object
  */
-class Schema
+class AttributeReader
 {
     /**
      * @var array<string, Question>
      */
-    public readonly array $questions;
+    public array $questions = [];
 
     /**
      * @var array<string, class-string<Answer>>
      */
-    private readonly array $answers;
+    private array $answers = [];
 
     /**
      * @param class-string<T> $class
-     * @throws InvalidArgumentException When a parameter has no single question attribute, or does not expect an answer.
+     * @param null|ReflectionClass<T> $reflection
+     * @throws InvalidArgumentException When a parameter lacks expected attributes, or does not assume an answer.
      */
-    public function __construct(private readonly string $class)
+    public function __construct(private readonly string $class, ?ReflectionClass $reflection = null)
     {
-        $questions = [];
-        $answers = [];
 
-        foreach ((new ReflectionClass($class))->getConstructor()?->getParameters() ?? [] as $parameter) {
-            $questions[$parameter->getName()] = self::question($parameter);
-            $answers[$parameter->getName()] = self::answerType($parameter);
+        $reflection ??= new ReflectionClass($class);
+
+        foreach ($reflection->getConstructor()?->getParameters() ?? [] as $parameter) {
+            $this->questions[$parameter->getName()] = self::question($parameter);
+            $this->answers[$parameter->getName()] = self::answerType($parameter);
         }
-
-        $this->questions = $questions;
-        $this->answers = $answers;
     }
 
     /**
@@ -91,11 +89,16 @@ class Schema
 
     private static function question(ReflectionParameter $parameter): Question
     {
+        /** @var array<ReflectionAttribute<Question>> $attributes */
         $attributes = $parameter->getAttributes(Question::class, ReflectionAttribute::IS_INSTANCEOF);
 
-        return 1 === count($attributes) ? $attributes[0]->newInstance() : throw new InvalidArgumentException(
-            sprintf('Expected one question attribute on $%s, got %d', $parameter->getName(), count($attributes)),
-        );
+        if (count($attributes) !== 1) {
+            throw new InvalidArgumentException(
+                sprintf('Expected one question attribute on $%s, got %d', $parameter->getName(), count($attributes)),
+            );
+        }
+
+        return $attributes[0]->newInstance();
     }
 
     /**
@@ -105,10 +108,13 @@ class Schema
     {
         $type = $parameter->getType();
 
-        if ($type instanceof ReflectionNamedType && is_subclass_of($type->getName(), Answer::class)) {
-            return $type->getName();
+        if (
+            !$type instanceof ReflectionNamedType
+            || !is_subclass_of($type->getName(), Answer::class)
+        ) {
+            throw new InvalidArgumentException(sprintf('Expected $%s to be typed as an %s', $parameter->getName(), Answer::class));
         }
 
-        throw new InvalidArgumentException(sprintf('Expected $%s to be typed as an %s', $parameter->getName(), Answer::class));
+        return $type->getName();
     }
 }
