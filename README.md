@@ -42,7 +42,7 @@ There are three question types:
 
 - **Noul** is a yes/no question. The answer is the probability of yes, from 0 to 1.
 - **Choice** picks one option from the set you define. Give each option a description, or `null` when it needs none.
-- **Score** rates the state along the ordered levels you define, from the lowest to the highest.
+- **Score** rates the state with the ordered levels, from the lowest to the highest.
 
 ```php
 use TypeSafeAI\SystemOneRequest;

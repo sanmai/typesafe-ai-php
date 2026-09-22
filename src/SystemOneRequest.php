@@ -56,9 +56,6 @@ class SystemOneRequest
         return new self($state, $model);
     }
 
-    /**
-     * Adds a question; its answer comes back under the same id.
-     */
     public function ask(string $id, Question $question): self
     {
         $this->questions[$id] = $question;
@@ -67,11 +64,10 @@ class SystemOneRequest
     }
 
     /**
-     * Asks every question that the attributes on a result class declare.
+     * Infer questions using attributes of the provided class.
      *
-     * Read the answers back with SystemOneResult::as($class).
-     *
-     * @param class-string $class A class whose constructor parameters carry question attributes.
+     * @see SystemOneResult::as($class).
+     * @param class-string $class
      * @see AttributeReader
      */
     public function askFor(string $class): self

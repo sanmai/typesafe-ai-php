@@ -37,7 +37,7 @@ $response = $client->systemOne(
 
 $frustration = $response->score('frustration');
 
-// The score is a probability-weighted level, so it can appear in between levels
+// The score is a probability-weighted level, so its value can be between two levels
 printf("Frustration: %.2f of %d (confidence %.2f)\n", $frustration->score, count($frustration->legend) - 1, $frustration->confidence);
 
 // The description could be JSON, if that was initially provided

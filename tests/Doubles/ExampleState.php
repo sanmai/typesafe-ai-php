@@ -30,7 +30,7 @@ class ExampleState implements JsonSerializable
 
     public ?string $assignee = null;
 
-    private string $secret = 'private properties go out too';
+    private string $secret = 'private properties are sent too';
 
     public function jsonSerialize(): mixed
     {

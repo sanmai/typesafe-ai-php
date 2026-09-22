@@ -40,7 +40,7 @@ class SystemOneResult
     public string $model;
 
     /**
-     * One answer per question, under the same ids as in the request.
+     * One answer per question, keyed by the same ids as the request.
      *
      * @var array<string, Answer>
      */

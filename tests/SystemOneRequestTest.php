@@ -233,7 +233,7 @@ class SystemOneRequestTest extends TestCase
         yield 'state as an object' => [
             fn() => SystemOneRequest::build(new ExampleState()),
             '{
-              "state": {"id": 42, "assignee": null, "secret": "private properties go out too"},
+              "state": {"id": 42, "assignee": null, "secret": "private properties are sent too"},
               "model": "jev-latest",
               "questions": {}
             }',

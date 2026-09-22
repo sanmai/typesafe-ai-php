@@ -20,6 +20,6 @@
 namespace Tests\TypeSafeAI\Doubles;
 
 /**
- * A class without a constructor asks nothing.
+ * A class without a constructor that declares no questions.
  */
 class NoQuestions {}
