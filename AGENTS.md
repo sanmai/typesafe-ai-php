@@ -67,4 +67,4 @@ The build system uses `chronic` to suppress output for successful commands; if a
 ## Documentation Style
 
 - **No Hard-Wrapped Lines:** Write each paragraph as a single long line in Markdown files. Let the editor handle soft-wrapping.
-- **Clarity:** Keep documentation concise and focused on usage examples.
+- **Clarity:** Keep documentation concise and focused on usage examples, following ASD-STE100 guidelines.
