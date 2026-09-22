@@ -57,8 +57,9 @@ class AttributeReader implements IteratorAggregate
     /**
      * Same as the constructor, for method chaining convenience.
      *
-     * @param ReflectionClass<T> $reflection
-     * @return self<T>
+     * @template TB of object
+     * @param ReflectionClass<TB> $reflection
+     * @return self<TB>
      */
     public static function build(ReflectionClass $reflection): self
     {
