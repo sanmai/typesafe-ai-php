@@ -28,7 +28,9 @@ use InvalidArgumentException;
 use JMS\Serializer\Exception\LogicException;
 use Psr\Log\AbstractLogger;
 use Stringable;
+use Tests\TypeSafeAI\Doubles\TicketDecision;
 use TypeSafeAI\SystemOneRequest;
+use TypeSafeAI\SystemOneResult;
 use TypeSafeAI\TypeSafeClient;
 
 use function file_get_contents;
@@ -116,6 +118,33 @@ class TypeSafeClientTest extends TestCase
             '{"state":"Help! My payouts have been failing for 3 days.","model":"jev-latest","questions":{"is_urgent":{"type":"noul","instructions":"Does this convey urgency?"}}}',
             (string) $request->getBody(),
         );
+    }
+
+    public function testEvaluate(): void
+    {
+        $state = ['message' => 'Help! My payouts have been failing for 3 days.'];
+        $response = $this->deserializeFile(__DIR__ . '/data/evaluation_mixed.json', SystemOneResult::class);
+
+        $expected = SystemOneRequest::build($state)
+            ->noul('is_urgent', 'Does this convey urgency?', 'Explicitly time-sensitive', 'No urgency expressed')
+            ->choice('department', 'Which team should handle this?', [
+                'billing' => 'Payments, invoicing, refunds',
+                'technical' => 'Bugs, outages, integrations',
+                'sales' => null,
+            ])
+            ->score('frustration', 'How frustrated is the customer?', ['Calm', 'Frustrated', 'Very angry']);
+
+        $client = $this->createPartialMock(TypeSafeClient::class, ['systemOne']);
+        $client->expects($this->once())
+            ->method('systemOne')
+            ->with($this->equalTo($expected))
+            ->willReturn($response);
+
+        $decision = $client->evaluate($state, TicketDecision::class);
+
+        $this->assertSame(0.92, $decision->is_urgent->noul);
+        $this->assertSame('technical', $decision->department->choice);
+        $this->assertSame(1.6, $decision->frustration->score);
     }
 
     public function testModels(): void

@@ -17,29 +17,16 @@
  * limitations under the License.
  */
 
-declare(strict_types=1);
+namespace Tests\TypeSafeAI\Doubles;
 
-namespace TypeSafeAI\Question;
+use TypeSafeAI\DTO\NoulAnswer;
+use TypeSafeAI\Question\Noul;
 
-use Attribute;
-use JMS\Serializer\Annotation\SkipWhenEmpty;
-
-/**
- * A yes/no question. The answer is the probability of yes.
- *
- * @phpstan-import-type EntryType from Question
- */
-#[Attribute(Attribute::TARGET_PARAMETER)]
-class Noul implements Question
+class DoubleQuestionAttribute
 {
-    public string $type = 'noul';
-
-    /**
-     * @param EntryType $instructions
-     */
     public function __construct(
-        public string|array|object|null $instructions = null,
-        #[SkipWhenEmpty]
-        public NoulCriteria $criteria = new NoulCriteria(),
+        #[Noul('Does this convey urgency?')]
+        #[Noul('Asked twice?')]
+        public readonly NoulAnswer $is_urgent,
     ) {}
 }

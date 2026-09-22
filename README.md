@@ -14,9 +14,9 @@ Requires PHP 8.2 or newer.
 
 There are three kinds of objects you work with:
 
-- **The client.** `TypeSafeClient` sends requests. Build it with the static `createInstance()` factory.
-- **The request.** `SystemOneRequest` retains the state to evaluate and the questions about it. You build it with a fluent interface.
-- **The response.** `SystemOneResult` retains one answer for each question, under the same id you gave the question.
+- `TypeSafeClient` sends requests. Build it with the static `createInstance()` factory.
+- `SystemOneRequest` retains the state/questions to evaluate. Easy to build using a fluent interface.
+- `SystemOneResult` retains one answer for each question, mapped to the ID of the original question.
 
 ## Usage
 
@@ -30,18 +30,51 @@ use TypeSafeAI\TypeSafeClient;
 $client = TypeSafeClient::createInstance($apiKey);
 ```
 
-The API key is optional: without one the client reads `TYPESAFE_API_KEY`, and throws `InvalidArgumentException` when that is not set either. `TYPESAFE_BASE_URL` overrides the API root the same way. Both names are the ones the JS and Python SDKs use.
+The API key is optional: without one the client reads `TYPESAFE_API_KEY`, and throws `InvalidArgumentException` when that is not set either. `TYPESAFE_BASE_URL` overrides the API root the same way, following in the steps of JS and Python SDKs.
 
 ```php
 $client = TypeSafeClient::createInstance();
 ```
 
-### Asking Questions
+### Using Result Classes
+
+Annotate any class with attributes, add `Answer` subclasses as parameter types, fire up `evaluate()` that will send the question, and return an instance of the class with all parameters assigned their respective answers. This is the recommended way to use the SDK.
+
+```php
+use TypeSafeAI\DTO\ChoiceAnswer;
+use TypeSafeAI\DTO\NoulAnswer;
+use TypeSafeAI\Question\Choice;
+use TypeSafeAI\Question\Noul;
+use TypeSafeAI\Question\NoulCriteria;
+
+class TicketDecision
+{
+    public function __construct(
+        #[Noul('Does this convey urgency?', new NoulCriteria(true: 'Explicitly time-sensitive'))]
+        public readonly NoulAnswer $is_urgent,
+        #[Choice('Which team should handle this?', [
+            'billing' => 'Payments, invoicing, refunds',
+            'technical' => 'Bugs, outages, integrations',
+            'sales' => null,
+        ])]
+        public readonly ChoiceAnswer $department,
+    ) {}
+}
+
+$decision = $client->evaluate('Help! My payouts have been failing for 3 days.', TicketDecision::class);
+
+$decision->is_urgent->noul;      // 0.95
+$decision->department->choice;   // 'billing'
+```
+
+For the token counts, the resolved model version, or a different model, send a `SystemOneRequest` with `systemOne()` as in the examples below.
+
+### Custom Requests
 
 There are three question types:
 
 - **Noul** is a yes/no question. The answer is the probability of yes, from 0 to 1.
-- **Choice** picks one option from the set. Each option can have an optional a description.
+- **Choice** picks one option from the set. Each option can have an optional description.
 - **Score** evaluates the state against the ordered levels, from the lowest to the highest.
 
 ```php
@@ -68,7 +101,7 @@ $request = SystemOneRequest::build('Help! My payouts have been failing for 3 day
 $response = $client->systemOne($request);
 ```
 
-The state and the instructions can be a string, or structured data such as an array or an object. Arrays and `stdClass` objects are sent as they are. Other objects are sent with their properties, private properties too; properties that are null are sent as null, and `JsonSerializable` is not used. If you need full control, convert the object to an array first.
+The state and the instructions can be a string, or structured data such as an array or an object. Objects are sent with their private properties: if you need full control, convert the object to an array first.
 
 Every description takes the same range of values: text, a JSON object, an array, or `null`.
 
@@ -84,9 +117,7 @@ $request = SystemOneRequest::build($ticket)
     ]);
 ```
 
-`instructions` is optional, so a question can lean on its criteria alone. The API needs at least one of the two: a Noul with neither is rejected with `400 Bad Request`.
-
-The request uses the `jev-latest` model by default; to use a different model, give its name as the second argument to `build()`. You can also use the constructor; `build()` exists only for method chaining before PHP 8.4:
+`instructions` is optional, so a question can lean on its criteria alone. The API requires at least one of the two.
 
 ```php
 use TypeSafeAI\Question\Noul;
@@ -100,9 +131,11 @@ $request = new SystemOneRequest($state, questions: [
 ]);
 ```
 
+Requests use the `jev-latest` model by default; to use a different model, provide it as the second argument to `build()` or the constructor.
+
 ### Reading Answers
 
-Each answer type has its own accessor, so static analysis knows which fields are available:
+Each answer type has its own accessor, so the IDE will tip you on the available fields:
 
 ```php
 $urgent = $response->noul('is_urgent');
@@ -123,17 +156,15 @@ $response->model;                // 'jev-N.NN', the actual model version
 $response->usage->input_tokens;  // 414
 ```
 
-Each answer also carries its `type`, which is useful when you walk `$response->answers` instead of asking for an id you know:
+An accessor throws `UnexpectedValueException` if there is no answer with that ID, or if the answer has a different type.
+
+All answers are also available in `$response->answers`, keyed by question ID.
+
+Each answer also has a type field, useful when you walk `$response->answers`:
 
 ```php
 $urgent->type;                   // 'noul'
 ```
-
-The levels in `legend` come back as they were sent, so they are text when you sent text, and structured JSON when you sent that.
-
-The score is the mean of the level numbers, weighted by their probabilities: here 0.96 × 1 + 0.04 × 2 = 1.04. Thus it can land between levels. The probabilities come in the order that the API gives, which can be different from the order of your options or levels.
-
-An accessor throws `UnexpectedValueException` if there is no answer with that id, or if the answer has a different type. All answers are also available in `$response->answers`, keyed by question id.
 
 ### Listing Models
 
@@ -147,9 +178,9 @@ foreach ($client->models()->models as $model) {
 
 ### Custom Question Types
 
-`SystemOneRequest::ask()` adds any object that implements the `TypeSafeAI\Question\Question` marker interface. The `noul()`, `choice()`, and `score()` methods are shortcuts for `ask()` with the bundled `Noul`, `Choice`, and `Score` classes.
+`SystemOneRequest::ask()` extends the request with any object that implements the `TypeSafeAI\Question\Question` marker interface. The `noul()`, `choice()`, and `score()` methods are shortcuts for `ask()` with the bundled `Noul`, `Choice`, and `Score` classes.
 
-Questions are plain data objects. The client serializes their properties to JSON, null values too. To add a question type, write a class with a `type` property and the fields that the API expects for that type. If the API does not accept null for an optional field, see how `NoulCriteria` leaves out the descriptions that are not set. The SDK can send a custom question, but it cannot read the answer: an answer type that the SDK does not know causes `systemOne()` to throw `JMS\Serializer\Exception\LogicException`, and the other answers in the response are lost too.
+Questions are plain data objects. The client serializes their properties to JSON, null values included.
 
 ## Examples
 
@@ -163,6 +194,7 @@ TYPESAFE_API_KEY=your-api-key php examples/urgency.php
 - [routing.php](examples/routing.php): a choice between teams, with the probability of each option.
 - [frustration.php](examples/frustration.php): a score along ordered levels.
 - [chat-log.php](examples/chat-log.php): questions of all three types about a chat log, in one request.
+- [attributes.php](examples/attributes.php): a result declaring its own questions using attributes.
 - [errors.php](examples/errors.php): an invalid request, and the validation error as returned by the API.
 
 ## Errors and Retries
@@ -184,7 +216,7 @@ try {
 
 Requests time out after 10 seconds by default, with an option to raise the `timeout` through `$clientOptions`.
 
-`createInstance()` takes optional `$extraHeaders`, `$retryOptions`, and `$clientOptions` arrays after the API key. Use them to send extra headers (a custom User-Agent, for example), to tune the bundled [retry middleware](https://github.com/caseyamcl/guzzle_retry_middleware), or to override defaults such as `base_uri`, `timeout`, or `connect_timeout`. Do not give `headers` or `handler` in `$clientOptions`: they replace the defaults, so the client loses the `Authorization` header, or the retries and the logger. Use `$extraHeaders` for headers.
+`createInstance()` takes optional `$extraHeaders`, `$retryOptions`, and `$clientOptions` arrays after the API key. Use them to send extra headers (a custom User-Agent, for example), to tune the bundled [retry middleware](https://github.com/caseyamcl/guzzle_retry_middleware), or to override defaults such as `base_uri`, `timeout`, or `connect_timeout`.
 
 ## Debug Logging
 

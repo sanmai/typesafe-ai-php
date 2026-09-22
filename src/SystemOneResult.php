@@ -63,8 +63,9 @@ class SystemOneResult
      * @template T of Answer
      * @param class-string<T> $type
      * @return T
+     * @internal
      */
-    private function answer(string $id, string $type): Answer
+    public function answer(string $id, string $type): Answer
     {
         $answer = $this->answers[$id] ?? null;
 

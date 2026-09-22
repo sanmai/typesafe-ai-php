@@ -76,6 +76,11 @@ class SystemOneResultTest extends TestCase
         $this->assertSame(0.78, $answer->confidence);
     }
 
+    public function testAnswer(): void
+    {
+        $this->assertSame(0.92, $this->response->answer('is_urgent', NoulAnswer::class)->noul);
+    }
+
     public function testStructuredScoreLegend(): void
     {
         $response = $this->deserializeFile(__DIR__ . '/data/evaluation_structured_score.json', SystemOneResult::class);
