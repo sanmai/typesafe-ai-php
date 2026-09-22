@@ -37,6 +37,7 @@ use TypeSafeAI\AttributeReader;
 use TypeSafeAI\SystemOneResult;
 
 use function array_keys;
+use function iterator_count;
 use function iterator_to_array;
 use function sprintf;
 
@@ -93,9 +94,12 @@ class AttributeReaderTest extends TestCase
      */
     public function testInvalidClass(string $class, string $message): void
     {
+        $reader = new AttributeReader(new ReflectionClass($class));
+
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage($message);
 
-        new AttributeReader(new ReflectionClass($class));
+        iterator_count($reader);
+        $reader->hydrate(new SystemOneResult());
     }
 }

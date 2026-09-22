@@ -21,7 +21,6 @@ declare(strict_types=1);
 
 namespace TypeSafeAI;
 
-use ArrayIterator;
 use InvalidArgumentException;
 use IteratorAggregate;
 use ReflectionAttribute;
@@ -51,26 +50,10 @@ use function sprintf;
 class AttributeReader implements IteratorAggregate
 {
     /**
-     * @var array<string, Question>
-     */
-    private array $questions = [];
-
-    /**
-     * @var array<string, class-string<Answer>>
-     */
-    private array $answers = [];
-
-    /**
      * @param ReflectionClass<T> $reflection
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly ReflectionClass $reflection)
-    {
-        foreach ($this->reflection->getConstructor()?->getParameters() ?? [] as $parameter) {
-            $this->questions[$parameter->getName()] = self::questionInstance($parameter);
-            $this->answers[$parameter->getName()] = self::answerTypeName($parameter);
-        }
-    }
+    public function __construct(private readonly ReflectionClass $reflection) {}
 
     /**
      * Same as the constructor, for method chaining convenience.
@@ -92,8 +75,8 @@ class AttributeReader implements IteratorAggregate
     {
         $arguments = [];
 
-        foreach ($this->answers as $id => $type) {
-            $arguments[$id] = $result->answer($id, $type);
+        foreach ($this->reflection->getConstructor()?->getParameters() ?? [] as $parameter) {
+            $arguments[$parameter->getName()] = $result->answer($parameter->getName(), self::answerTypeName($parameter));
         }
 
         return $this->reflection->newInstanceArgs($arguments);
@@ -132,6 +115,8 @@ class AttributeReader implements IteratorAggregate
 
     public function getIterator(): Traversable
     {
-        return new ArrayIterator($this->questions);
+        foreach ($this->reflection->getConstructor()?->getParameters() ?? [] as $parameter) {
+            yield $parameter->getName() => self::questionInstance($parameter);
+        }
     }
 }
