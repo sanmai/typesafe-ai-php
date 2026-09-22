@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace Tests\TypeSafeAI;
 
 use InvalidArgumentException;
+use ReflectionClass;
 use Tests\TypeSafeAI\Doubles\DoubleQuestionAttribute;
 use Tests\TypeSafeAI\Doubles\MissingQuestionAttribute;
 use Tests\TypeSafeAI\Doubles\NoQuestions;
@@ -37,6 +38,7 @@ use TypeSafeAI\SystemOneResult;
 
 use function array_keys;
 use function iterator_to_array;
+use function sprintf;
 
 /**
  * @covers \TypeSafeAI\AttributeReader
@@ -81,8 +83,8 @@ class AttributeReaderTest extends TestCase
     {
         yield 'no attribute' => [MissingQuestionAttribute::class, 'Expected one question attribute on $is_urgent, got 0'];
         yield 'two attributes' => [DoubleQuestionAttribute::class, 'Expected one question attribute on $is_urgent, got 2'];
-        yield 'not an answer' => [WrongAnswerType::class, 'Expected $department to be typed as an ' . Answer::class];
-        yield 'no type' => [UntypedAnswer::class, 'Expected $frustration to be typed as an ' . Answer::class];
+        yield 'not an answer' => [WrongAnswerType::class, sprintf('Expected $department to be typed as an %s', Answer::class)];
+        yield 'no type' => [UntypedAnswer::class, sprintf('Expected $frustration to be typed as an %s', Answer::class)];
     }
 
     /**
@@ -94,6 +96,6 @@ class AttributeReaderTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage($message);
 
-        new AttributeReader($class);
+        new AttributeReader(new ReflectionClass($class));
     }
 }
