@@ -36,6 +36,7 @@ use TypeSafeAI\AttributeReader;
 use TypeSafeAI\SystemOneResult;
 
 use function array_keys;
+use function iterator_to_array;
 
 /**
  * @covers \TypeSafeAI\AttributeReader
@@ -44,7 +45,7 @@ class AttributeReaderTest extends TestCase
 {
     public function testQuestions(): void
     {
-        $questions = (new AttributeReader(TicketDecision::class))->questions;
+        $questions = iterator_to_array(new AttributeReader(TicketDecision::class));
 
         $this->assertSame(['is_urgent', 'department', 'frustration'], array_keys($questions));
         $this->assertInstanceOf(Noul::class, $questions['is_urgent']);
@@ -54,7 +55,7 @@ class AttributeReaderTest extends TestCase
 
     public function testQuestionArguments(): void
     {
-        $question = (new AttributeReader(TicketDecision::class))->questions['is_urgent'];
+        $question = iterator_to_array((new AttributeReader(TicketDecision::class)))['is_urgent'];
 
         $this->assertSame('Does this convey urgency?', $question->instructions);
         $this->assertSame('Explicitly time-sensitive', $question->criteria->true);
@@ -62,7 +63,7 @@ class AttributeReaderTest extends TestCase
 
     public function testNoConstructor(): void
     {
-        $this->assertSame([], (new AttributeReader(NoQuestions::class))->questions);
+        $this->assertSame([], iterator_to_array((new AttributeReader(NoQuestions::class))));
     }
 
     public function testHydrate(): void

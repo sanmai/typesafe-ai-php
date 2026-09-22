@@ -21,33 +21,37 @@ declare(strict_types=1);
 
 namespace TypeSafeAI;
 
+use ArrayIterator;
 use InvalidArgumentException;
+use IteratorAggregate;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
+use Traversable;
 use TypeSafeAI\DTO\Answer;
 use TypeSafeAI\Question\Question;
-use UnexpectedValueException;
+use ReflectionException;
 
 use function count;
 use function is_subclass_of;
 use function sprintf;
 
 /**
- * The questions that a result class asks, read from the attributes on its constructor.
+ * Parses the questions and answer types from the annotated constructor.
  *
- * Each parameter needs one question attribute. The parameter name is the question id, and the
- * parameter type is the answer that comes back under it.
+ * We assume that each parameter needs exactly one question attribute. The parameter name is the question id, and the
+ * parameter type is the expected type of the answer.
  *
  * @template T of object
+ * @template-implements IteratorAggregate<string, Question>
  */
-class AttributeReader
+class AttributeReader implements IteratorAggregate
 {
     /**
      * @var array<string, Question>
      */
-    public array $questions = [];
+    private array $questions = [];
 
     /**
      * @var array<string, class-string<Answer>>
@@ -57,24 +61,22 @@ class AttributeReader
     /**
      * @param class-string<T> $class
      * @param null|ReflectionClass<T> $reflection
-     * @throws InvalidArgumentException When a parameter lacks expected attributes, or does not assume an answer.
+     * @throws InvalidArgumentException|ReflectionException
      */
     public function __construct(private readonly string $class, ?ReflectionClass $reflection = null)
     {
-
         $reflection ??= new ReflectionClass($class);
 
         foreach ($reflection->getConstructor()?->getParameters() ?? [] as $parameter) {
-            $this->questions[$parameter->getName()] = self::question($parameter);
-            $this->answers[$parameter->getName()] = self::answerType($parameter);
+            $this->questions[$parameter->getName()] = self::questionInstance($parameter);
+            $this->answers[$parameter->getName()] = self::answerTypeName($parameter);
         }
     }
 
     /**
-     * Builds the result class from the answers, each under the id of its parameter.
+     * Builds the result class from the answers using named parameters.
      *
      * @return T
-     * @throws UnexpectedValueException When an answer is missing, or has another type.
      */
     public function hydrate(SystemOneResult $result): object
     {
@@ -87,7 +89,7 @@ class AttributeReader
         return new $this->class(...$arguments);
     }
 
-    private static function question(ReflectionParameter $parameter): Question
+    private static function questionInstance(ReflectionParameter $parameter): Question
     {
         /** @var array<ReflectionAttribute<Question>> $attributes */
         $attributes = $parameter->getAttributes(Question::class, ReflectionAttribute::IS_INSTANCEOF);
@@ -104,7 +106,7 @@ class AttributeReader
     /**
      * @return class-string<Answer>
      */
-    private static function answerType(ReflectionParameter $parameter): string
+    private static function answerTypeName(ReflectionParameter $parameter): string
     {
         $type = $parameter->getType();
 
@@ -116,5 +118,10 @@ class AttributeReader
         }
 
         return $type->getName();
+    }
+
+    public function getIterator(): Traversable
+    {
+        return new ArrayIterator($this->questions);
     }
 }

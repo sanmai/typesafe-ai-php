@@ -78,7 +78,7 @@ class SystemOneRequest
      */
     public function askFor(string $class): self
     {
-        foreach ((new AttributeReader($class))->questions as $id => $question) {
+        foreach (new AttributeReader($class) as $id => $question) {
             $this->ask($id, $question);
         }
 
