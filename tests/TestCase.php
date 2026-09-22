@@ -24,6 +24,7 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use JSONSerializer\Contracts\JsonDeserializer;
 use TypeSafeAI\TypeSafeClient;
 use JMS\Serializer\SerializerInterface;
 use JSONSerializer;
@@ -46,7 +47,7 @@ use const JSON_UNESCAPED_UNICODE;
 
 abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
-    protected SerializerInterface $serializer;
+    protected SerializerInterface&JsonDeserializer $serializer;
     protected array $requests = [];
     protected MockHandler $mock;
 
