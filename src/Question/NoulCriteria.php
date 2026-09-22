@@ -31,14 +31,13 @@ use function array_filter;
 /**
  * Optional descriptions of what a yes and a no mean.
  *
- * @phpstan-import-type EntryType from Question
- * @phpstan-import-type ValueType from Question
+ * @phpstan-import-type ValueType from \TypeSafeAI\SystemOneRequest
  */
 class NoulCriteria
 {
     /**
-     * @param EntryType $true What a yes (value near 1) means.
-     * @param EntryType $false What a no (value near 0) means.
+     * @param ?ValueType $true What a yes (value near 1) means.
+     * @param ?ValueType $false What a no (value near 0) means.
      */
     public function __construct(
         #[Exclude]

@@ -27,7 +27,7 @@ use JMS\Serializer\Annotation\SkipWhenEmpty;
 /**
  * A yes/no question. The answer is the probability of yes.
  *
- * @phpstan-import-type EntryType from Question
+ * @phpstan-import-type ValueType from \TypeSafeAI\SystemOneRequest
  */
 #[Attribute(Attribute::TARGET_PARAMETER)]
 class Noul implements Question
@@ -35,7 +35,7 @@ class Noul implements Question
     public string $type = 'noul';
 
     /**
-     * @param EntryType $instructions
+     * @param ?ValueType $instructions
      */
     public function __construct(
         public string|array|object|null $instructions = null,

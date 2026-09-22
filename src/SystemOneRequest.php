@@ -29,8 +29,9 @@ use TypeSafeAI\Question\Question;
 use TypeSafeAI\Question\Score;
 
 /**
- * @phpstan-import-type EntryType from Question
- * @phpstan-import-type ValueType from Question
+ * A ValueType lists the acceptable types for a state, an instruction, or a description: text, or structured JSON. Can be marked optional.
+ *
+ * @phpstan-type ValueType string|array<mixed>|object
  */
 class SystemOneRequest
 {
@@ -65,9 +66,9 @@ class SystemOneRequest
     }
 
     /**
-     * @param EntryType $instructions
-     * @param EntryType $true
-     * @param EntryType $false
+     * @param ?ValueType $instructions
+     * @param ?ValueType $true
+     * @param ?ValueType $false
      * @see Noul
      */
     public function noul(
@@ -80,8 +81,8 @@ class SystemOneRequest
     }
 
     /**
-     * @param EntryType $instructions
-     * @param array<array-key, EntryType> $criteria
+     * @param ?ValueType $instructions
+     * @param array<array-key, ?ValueType> $criteria
      * @see Choice
      */
     public function choice(string $id, string|array|object|null $instructions, array $criteria): self
@@ -90,7 +91,7 @@ class SystemOneRequest
     }
 
     /**
-     * @param EntryType $instructions
+     * @param ?ValueType $instructions
      * @param array<ValueType> $levels
      * @see Score
      */

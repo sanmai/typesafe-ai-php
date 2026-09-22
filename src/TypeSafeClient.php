@@ -44,7 +44,7 @@ use function sprintf;
 /**
  * TypeSafe AI API Client.
  *
- * @phpstan-import-type ValueType from \TypeSafeAI\Question\Question
+ * @phpstan-import-type ValueType from SystemOneRequest
  */
 class TypeSafeClient
 {

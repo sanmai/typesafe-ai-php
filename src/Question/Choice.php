@@ -27,7 +27,7 @@ use JMS\Serializer\Annotation\Type;
 /**
  * Selects one option from the set.
  *
- * @phpstan-import-type EntryType from Question
+ * @phpstan-import-type ValueType from \TypeSafeAI\SystemOneRequest
  */
 #[Attribute(Attribute::TARGET_PARAMETER)]
 class Choice implements Question
@@ -35,8 +35,8 @@ class Choice implements Question
     public string $type = 'choice';
 
     /**
-     * @param EntryType $instructions
-     * @param array<array-key, EntryType> $criteria Options mapped to their descriptions; null when an option needs no description.
+     * @param ?ValueType $instructions
+     * @param array<array-key, ?ValueType> $criteria Options mapped to their descriptions; null when an option needs no description.
      */
     public function __construct(
         public string|array|object|null $instructions = null,
