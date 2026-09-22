@@ -94,15 +94,18 @@ class AttributeReader implements IteratorAggregate
      */
     public function hydrate(SystemOneResult $result): object
     {
-        $arguments = [];
-
-        foreach ($this->reflection->getConstructor()?->getParameters() ?? [] as $parameter) {
-            $arguments[$parameter->getName()] = $result->answer($parameter->getName(), self::answerTypeName($parameter));
-        }
-
-        return $this->reflection->newInstanceArgs($arguments);
+        return $this->reflection->newInstance(...$this->argsFrom($result));
     }
 
+    private function argsFrom(SystemOneResult $result): iterable
+    {
+        foreach ($this->reflection->getConstructor()?->getParameters() ?? [] as $parameter) {
+            yield $parameter->getName() => $result->answer(
+                $parameter->getName(),
+                self::answerTypeName($parameter),
+            );
+        }
+    }
 
     /**
      * @return class-string<Answer>
