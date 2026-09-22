@@ -66,6 +66,27 @@ class AttributeReader implements IteratorAggregate
         return new self($reflection);
     }
 
+    public function getIterator(): Traversable
+    {
+        foreach ($this->reflection->getConstructor()?->getParameters() ?? [] as $parameter) {
+            yield $parameter->getName() => self::questionInstance($parameter);
+        }
+    }
+
+    private static function questionInstance(ReflectionParameter $parameter): Question
+    {
+        /** @var array<ReflectionAttribute<Question>> $attributes */
+        $attributes = $parameter->getAttributes(Question::class, ReflectionAttribute::IS_INSTANCEOF);
+
+        if (count($attributes) !== 1) {
+            throw new InvalidArgumentException(
+                sprintf('Expected one question attribute on $%s, got %d', $parameter->getName(), count($attributes)),
+            );
+        }
+
+        return $attributes[0]->newInstance();
+    }
+
     /**
      * Builds the result class from the answers using named parameters.
      *
@@ -82,19 +103,6 @@ class AttributeReader implements IteratorAggregate
         return $this->reflection->newInstanceArgs($arguments);
     }
 
-    private static function questionInstance(ReflectionParameter $parameter): Question
-    {
-        /** @var array<ReflectionAttribute<Question>> $attributes */
-        $attributes = $parameter->getAttributes(Question::class, ReflectionAttribute::IS_INSTANCEOF);
-
-        if (count($attributes) !== 1) {
-            throw new InvalidArgumentException(
-                sprintf('Expected one question attribute on $%s, got %d', $parameter->getName(), count($attributes)),
-            );
-        }
-
-        return $attributes[0]->newInstance();
-    }
 
     /**
      * @return class-string<Answer>
@@ -113,10 +121,4 @@ class AttributeReader implements IteratorAggregate
         return $type->getName();
     }
 
-    public function getIterator(): Traversable
-    {
-        foreach ($this->reflection->getConstructor()?->getParameters() ?? [] as $parameter) {
-            yield $parameter->getName() => self::questionInstance($parameter);
-        }
-    }
 }
