@@ -66,9 +66,17 @@ class AttributeReader implements IteratorAggregate
         return new self($reflection);
     }
 
+    /**
+     * @return iterable<ReflectionParameter>
+     */
+    private function getParameters(): iterable
+    {
+        yield from $this->reflection->getConstructor()?->getParameters() ?? [];
+    }
+
     public function getIterator(): Traversable
     {
-        foreach ($this->reflection->getConstructor()?->getParameters() ?? [] as $parameter) {
+        foreach ($this->getParameters() as $parameter) {
             yield $parameter->getName() => self::questionInstance($parameter);
         }
     }
@@ -88,7 +96,7 @@ class AttributeReader implements IteratorAggregate
     }
 
     /**
-     * Builds the result class from the answers using named parameters.
+     * Builds the result class from the answers.
      *
      * @return T
      */
@@ -97,10 +105,13 @@ class AttributeReader implements IteratorAggregate
         return $this->reflection->newInstance(...$this->argsFrom($result));
     }
 
+    /**
+     * @return iterable<Answer>
+     */
     private function argsFrom(SystemOneResult $result): iterable
     {
-        foreach ($this->reflection->getConstructor()?->getParameters() ?? [] as $parameter) {
-            yield $parameter->getName() => $result->answer(
+        foreach ($this->getParameters() as $parameter) {
+            yield $result->answer(
                 $parameter->getName(),
                 self::answerTypeName($parameter),
             );
