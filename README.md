@@ -41,8 +41,8 @@ $client = TypeSafeClient::createInstance();
 There are three question types:
 
 - **Noul** is a yes/no question. The answer is the probability of yes, from 0 to 1.
-- **Choice** picks one option from the set you define. Give each option a description, or `null` when it needs none.
-- **Score** rates the state along the ordered levels you define, from the lowest to the highest.
+- **Choice** picks one option from the set. Each option can have an optional a description.
+- **Score** evaluates the state against the ordered levels, from the lowest to the highest.
 
 ```php
 use TypeSafeAI\SystemOneRequest;
@@ -70,7 +70,7 @@ $response = $client->systemOne($request);
 
 The state and the instructions can be a string, or structured data such as an array or an object. Arrays and `stdClass` objects are sent as they are. Other objects are sent with their properties, private properties too; properties that are null are sent as null, and `JsonSerializable` is not used. If you need full control, convert the object to an array first.
 
-Every description takes the same range of values: text, a JSON object, an array, or `null`. Use structure when a plain sentence leaves the boundary unclear:
+Every description takes the same range of values: text, a JSON object, an array, or `null`.
 
 ```php
 $request = SystemOneRequest::build($ticket)
@@ -153,7 +153,7 @@ Questions are plain data objects. The client serializes their properties to JSON
 
 ## Examples
 
-The [examples](examples/) directory has scripts that you can run. Each one reads the API key from the `TYPESAFE_API_KEY` environment variable:
+Check out the [examples](examples/) directory. Examples use the API key from the `TYPESAFE_API_KEY` environment variable:
 
 ```bash
 TYPESAFE_API_KEY=your-api-key php examples/urgency.php
@@ -163,11 +163,11 @@ TYPESAFE_API_KEY=your-api-key php examples/urgency.php
 - [routing.php](examples/routing.php): a choice between teams, with the probability of each option.
 - [frustration.php](examples/frustration.php): a score along ordered levels.
 - [chat-log.php](examples/chat-log.php): questions of all three types about a chat log, in one request.
-- [errors.php](examples/errors.php): an invalid request, and the validation error that the API returns.
+- [errors.php](examples/errors.php): an invalid request, and the validation error as returned by the API.
 
 ## Errors and Retries
 
-The client retries `408 Request Timeout`, `429 Too Many Requests`, every `5xx` response, and connection timeouts, twice at most. Other errors throw Guzzle exceptions: a `ClientException` for `401 Unauthorized` (check your API key), for `400 Bad Request` (a question that the API cannot use, such as a choice without options), and for `422 Unprocessable Entity` (the response body identifies the field that failed validation).
+The client retries `408 Request Timeout`, `429 Too Many Requests`, every `5xx` response, and connection timeouts, twice at most. Other errors throw Guzzle exceptions: a `ClientException` for `401 Unauthorized` (check your API key), for `400 Bad Request` (e.g. for choices without options), and for `422 Unprocessable Entity` (the error will hint at the failed field).
 
 ```php
 use GuzzleHttp\Exception\ClientException;
@@ -182,13 +182,13 @@ try {
 
 ## Client Configuration
 
-Requests time out after 10 seconds. Raise `timeout` through `$clientOptions` when you ask many questions at once.
+Requests time out after 10 seconds by default, with an option to raise the `timeout` through `$clientOptions`.
 
 `createInstance()` takes optional `$extraHeaders`, `$retryOptions`, and `$clientOptions` arrays after the API key. Use them to send extra headers (a custom User-Agent, for example), to tune the bundled [retry middleware](https://github.com/caseyamcl/guzzle_retry_middleware), or to override defaults such as `base_uri`, `timeout`, or `connect_timeout`. Do not give `headers` or `handler` in `$clientOptions`: they replace the defaults, so the client loses the `Authorization` header, or the retries and the logger. Use `$extraHeaders` for headers.
 
 ## Debug Logging
 
-`TypeSafeClient` accepts any PSR-3 logger through `setLogger()`. The logger records full request and response bodies, which helps while you experiment. The default template, `TypeSafeClient::LOG_TEMPLATE`, leaves out the headers, so your API key does not get into the logs. If you give your own template as the second argument, do not use `{request}` or `{req_headers}`, because they include the `Authorization` header:
+`TypeSafeClient` accepts any PSR-3 logger through `setLogger()`.
 
 ```php
 $client->setLogger($psrLogger);

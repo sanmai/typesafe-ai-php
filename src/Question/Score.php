@@ -24,8 +24,6 @@ namespace TypeSafeAI\Question;
 use JMS\Serializer\Annotation\Type;
 
 /**
- * Rates the state along the ordered levels you define.
- *
  * @phpstan-import-type EntryType from Question
  */
 class Score implements Question

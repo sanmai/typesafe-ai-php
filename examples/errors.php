@@ -19,7 +19,7 @@
 
 declare(strict_types=1);
 
-// The SDK does not validate questions; the API does. An invalid request comes back as a 422 error.
+// The SDK does not validate questions. The API returns a 422 error for an invalid request.
 //
 // Run: TYPESAFE_API_KEY=your-api-key php examples/errors.php
 

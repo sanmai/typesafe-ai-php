@@ -29,8 +29,6 @@ use TypeSafeAI\Question\Question;
 use TypeSafeAI\Question\Score;
 
 /**
- * The state to evaluate, and the questions to answer about it.
- *
  * @phpstan-import-type EntryType from Question
  */
 class SystemOneRequest
@@ -39,7 +37,7 @@ class SystemOneRequest
 
     /**
      * @param string|array<mixed>|object $state Text, or structured data such as a chat log.
-     * @param array<string, Question> $questions Answers come back under the same ids.
+     * @param array<string, Question> $questions
      */
     public function __construct(
         public string|array|object $state,
@@ -49,7 +47,7 @@ class SystemOneRequest
     ) {}
 
     /**
-     * Same as the constructor, for method chaining before PHP 8.4.
+     * Same as the constructor, for method chaining convenience.
      *
      * @param string|array<mixed>|object $state
      */
@@ -58,9 +56,6 @@ class SystemOneRequest
         return new self($state, $model);
     }
 
-    /**
-     * Adds a question; its answer comes back under the same id.
-     */
     public function ask(string $id, Question $question): self
     {
         $this->questions[$id] = $question;

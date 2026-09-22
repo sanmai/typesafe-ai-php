@@ -143,7 +143,7 @@ class TypeSafeClient
     /**
      * Answers each question about the state.
      *
-     * @throws GuzzleException On 401 (bad API key), 422 (invalid request), or when retries run out
+     * @throws GuzzleException On 401 (bad API key), 422 (invalid request), or when the retries are exhausted
      * @throws LogicException When an answer has a type that the SDK does not know
      */
     public function systemOne(SystemOneRequest $request): SystemOneResult

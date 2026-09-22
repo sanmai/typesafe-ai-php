@@ -34,14 +34,9 @@ use function sprintf;
 
 class SystemOneResult
 {
-    /**
-     * The model that performed the evaluation.
-     */
     public string $model;
 
     /**
-     * One answer per question, under the same ids as in the request.
-     *
      * @var array<string, Answer>
      */
     #[Type('array<string, TypeSafeAI\DTO\Answer>')]

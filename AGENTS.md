@@ -8,8 +8,8 @@ It is designed to be type-safe and easy to use: requests are built with a fluent
 - **API reference:** https://docs.typesafe.ai (`POST /v1/systemone`, and `GET /v1/models`, which the published reference does not document).
 - **Core Architecture:**
     - **Client:** `TypeSafeClient` sends requests and deserializes responses.
-    - **Request:** `SystemOneRequest` holds the state and a map of `Question` DTOs (`Noul`, `Choice`, `Score`). The client serializes it with JMS.
-    - **Response/DTOs:** `SystemOneResult` holds a map of `Answer` DTOs. JMS picks the subclass from the `type` field.
+    - **Request:** `SystemOneRequest` retains the state and a map of `Question` DTOs (`Noul`, `Choice`, `Score`). The client serializes it with JMS.
+    - **Response/DTOs:** `SystemOneResult` retains a map of `Answer` DTOs. JMS picks the subclass from the `type` field.
     - **Models:** `TypeSafeClient::models()` returns a `ModelsResponse` of `DTO\ModelCard`.
 
 End-user documentation:
@@ -35,7 +35,7 @@ End-user documentation:
 ## Implementation Details
 
 - **JSON maps**: The API uses maps keyed by ids and options that you choose. Declare them with a key type, such as `#[Type('array<string, string>')]`: JMS then writes a JSON object, also when the map is empty or has keys such as `"0"`. Declare lists as `array<string>`; JMS re-indexes them.
-- **Free-form JSON values**: Instructions and criteria hold text, a JSON object, an array, or null. Declare such a value as `union`, as in `#[Type('array<string, union>')]` for a map and `#[Type('array<union>')]` for a list: JMS dispatches on the runtime type and leaves the value alone. A value type of `string` stringifies nested data, `mixed` is not a JMS type and throws, and leaving the type off re-indexes numeric keys. `union` works only when serializing; use a bare `#[Type('array')]` for a free-form value that is also read back, as `ScoreAnswer::$legend` does.
+- **Free-form JSON values**: Instructions and criteria can be text, a JSON object, an array, or null. Declare such a value as `union`, as in `#[Type('array<string, union>')]` for a map and `#[Type('array<union>')]` for a list: JMS dispatches on the runtime type and leaves the value alone. A value type of `string` stringifies nested data, `mixed` is not a JMS type and throws, and leaving the type off re-indexes numeric keys. `union` works only when serializing; use a bare `#[Type('array')]` for a free-form value that is also read back, as `ScoreAnswer::$legend` does.
     - `union` is the name JMS gives a PHP union property itself (`TypedPropertiesDriver`), and `UnionHandler` is registered under it. Writing the name by hand is not a documented feature, so treat it as load-bearing on JMS internals: `serializeUnion()` ignores the type parameters and dispatches on the runtime type, which is what makes it a pass-through, while `deserializeUnion()` reads them and throws when they are absent.
     - The tripwire is `SystemOneRequestTest::provideRequests()`. Its structured cases assert the exact serialized JSON, so a JMS upgrade that changes this fails the build rather than quietly sending `"Array"` in place of a nested description. Keep those cases when you touch the provider.
 - **Nulls**: The client serializes with `serializeNull` on, so all null values are sent: in arrays (a choice option without a description) and in the user state. If a DTO has optional fields that the API must not get as null, the DTO leaves them out itself: exclude the properties and add an inline virtual property that returns only the values that are set (see `NoulCriteria::descriptions()`). To leave out a nested object when it gives no values, add `#[SkipWhenEmpty]` (see `Noul::$criteria`).
@@ -67,4 +67,4 @@ The build system uses `chronic` to suppress output for successful commands; if a
 ## Documentation Style
 
 - **No Hard-Wrapped Lines:** Write each paragraph as a single long line in Markdown files. Let the editor handle soft-wrapping.
-- **Clarity:** Keep documentation concise and focused on usage examples.
+- **Clarity:** Keep documentation concise and focused on usage examples, following ASD-STE100 guidelines.
