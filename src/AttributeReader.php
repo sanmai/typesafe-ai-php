@@ -71,7 +71,7 @@ class AttributeReader implements IteratorAggregate
      */
     private function getParameters(): iterable
     {
-        yield from $this->reflection->getConstructor()?->getParameters() ?? [];
+        return $this->reflection->getConstructor()?->getParameters() ?? [];
     }
 
     public function getIterator(): Traversable
