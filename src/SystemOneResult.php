@@ -34,14 +34,9 @@ use function sprintf;
 
 class SystemOneResult
 {
-    /**
-     * The model that performed the evaluation.
-     */
     public string $model;
 
     /**
-     * One answer per question, keyed by the same ids as the request.
-     *
      * @var array<string, Answer>
      */
     #[Type('array<string, TypeSafeAI\DTO\Answer>')]
@@ -65,7 +60,7 @@ class SystemOneResult
     }
 
     /**
-     * Fills a result class with the answers to the questions its attributes declare.
+     * Hydrates a result class using attributes.
      *
      * @template TResult of object
      * @param class-string<TResult> $class
