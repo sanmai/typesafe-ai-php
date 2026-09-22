@@ -69,6 +69,7 @@ class AttributeReaderTest extends TestCase
         $reader = AttributeReader::build(new ReflectionClass(NoQuestions::class));
 
         $this->assertInstanceOf(NoQuestions::class, $reader->hydrate(new SystemOneResult()));
+        $this->assertSame([], iterator_to_array($reader));
     }
 
     public function testHydrate(): void
