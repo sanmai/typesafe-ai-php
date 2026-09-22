@@ -29,14 +29,16 @@ use TypeSafeAI\Question\Question;
 use TypeSafeAI\Question\Score;
 
 /**
- * @phpstan-import-type EntryType from Question
+ * A ValueType lists the acceptable types for a state, an instruction, or a description: text, or structured JSON. Can be marked optional.
+ *
+ * @phpstan-type ValueType string|array<mixed>|object
  */
 class SystemOneRequest
 {
     public const MODEL_LATEST = 'jev-latest';
 
     /**
-     * @param string|array<mixed>|object $state Text, or structured data such as a chat log.
+     * @param ValueType $state Text, or structured data such as a chat log.
      * @param array<string, Question> $questions
      */
     public function __construct(
@@ -49,7 +51,7 @@ class SystemOneRequest
     /**
      * Same as the constructor, for method chaining convenience.
      *
-     * @param string|array<mixed>|object $state
+     * @param ValueType $state
      */
     public static function build(string|array|object $state, string $model = self::MODEL_LATEST): self
     {
@@ -64,9 +66,9 @@ class SystemOneRequest
     }
 
     /**
-     * @param EntryType $instructions
-     * @param EntryType $true
-     * @param EntryType $false
+     * @param ?ValueType $instructions
+     * @param ?ValueType $true
+     * @param ?ValueType $false
      * @see Noul
      */
     public function noul(
@@ -79,8 +81,8 @@ class SystemOneRequest
     }
 
     /**
-     * @param EntryType $instructions
-     * @param array<array-key, EntryType> $criteria
+     * @param ?ValueType $instructions
+     * @param array<array-key, ?ValueType> $criteria
      * @see Choice
      */
     public function choice(string $id, string|array|object|null $instructions, array $criteria): self
@@ -89,8 +91,8 @@ class SystemOneRequest
     }
 
     /**
-     * @param EntryType $instructions
-     * @param array<EntryType> $levels
+     * @param ?ValueType $instructions
+     * @param array<ValueType> $levels
      * @see Score
      */
     public function score(string $id, string|array|object|null $instructions, array $levels): self

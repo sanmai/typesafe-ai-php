@@ -25,7 +25,7 @@ use Attribute;
 use JMS\Serializer\Annotation\Type;
 
 /**
- * @phpstan-import-type EntryType from Question
+ * @phpstan-import-type ValueType from \TypeSafeAI\SystemOneRequest
  */
 #[Attribute(Attribute::TARGET_PARAMETER)]
 class Score implements Question
@@ -33,8 +33,8 @@ class Score implements Question
     public string $type = 'score';
 
     /**
-     * @param EntryType $instructions
-     * @param array<EntryType> $criteria Level descriptions, from the lowest to the highest.
+     * @param ?ValueType $instructions
+     * @param array<ValueType> $criteria Level descriptions, from the lowest to the highest.
      */
     public function __construct(
         public string|array|object|null $instructions = null,
