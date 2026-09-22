@@ -47,7 +47,7 @@ class NoulCriteria
     ) {}
 
     /**
-     * The client sends nulls, so this hook omits the descriptions that were not set.
+     * A hook to omit optional descriptions.
      *
      * @return array<string, EntryType>
      */
