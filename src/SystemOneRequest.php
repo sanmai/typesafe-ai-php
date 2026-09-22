@@ -30,13 +30,14 @@ use TypeSafeAI\Question\Score;
 
 /**
  * @phpstan-import-type EntryType from Question
+ * @phpstan-import-type ValueType from Question
  */
 class SystemOneRequest
 {
     public const MODEL_LATEST = 'jev-latest';
 
     /**
-     * @param string|array<mixed>|object $state Text, or structured data such as a chat log.
+     * @param ValueType $state Text, or structured data such as a chat log.
      * @param array<string, Question> $questions
      */
     public function __construct(
@@ -49,7 +50,7 @@ class SystemOneRequest
     /**
      * Same as the constructor, for method chaining convenience.
      *
-     * @param string|array<mixed>|object $state
+     * @param ValueType $state
      */
     public static function build(string|array|object $state, string $model = self::MODEL_LATEST): self
     {
@@ -90,7 +91,7 @@ class SystemOneRequest
 
     /**
      * @param EntryType $instructions
-     * @param array<EntryType> $levels
+     * @param array<ValueType> $levels
      * @see Score
      */
     public function score(string $id, string|array|object|null $instructions, array $levels): self

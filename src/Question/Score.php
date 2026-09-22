@@ -26,6 +26,7 @@ use JMS\Serializer\Annotation\Type;
 
 /**
  * @phpstan-import-type EntryType from Question
+ * @phpstan-import-type ValueType from Question
  */
 #[Attribute(Attribute::TARGET_PARAMETER)]
 class Score implements Question
@@ -34,7 +35,7 @@ class Score implements Question
 
     /**
      * @param EntryType $instructions
-     * @param array<EntryType> $criteria Level descriptions, from the lowest to the highest.
+     * @param array<ValueType> $criteria Level descriptions, from the lowest to the highest.
      */
     public function __construct(
         public string|array|object|null $instructions = null,

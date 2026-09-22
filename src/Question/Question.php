@@ -24,8 +24,9 @@ namespace TypeSafeAI\Question;
 /**
  * A typed question. The client serializes its public properties, null values included.
  *
- * The API accepts text, structured JSON, or null, for instructions and criteria.
+ * Every value the API accepts is a ValueType: text, or structured JSON. An EntryType is optional: null marks an absent instruction or description.
  *
- * @phpstan-type EntryType string|array<mixed>|object|null
+ * @phpstan-type ValueType string|array<mixed>|object
+ * @phpstan-type EntryType ValueType|null
  */
 interface Question {}

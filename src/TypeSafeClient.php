@@ -43,6 +43,8 @@ use function sprintf;
 
 /**
  * TypeSafe AI API Client.
+ *
+ * @phpstan-import-type ValueType from \TypeSafeAI\Question\Question
  */
 class TypeSafeClient
 {
@@ -164,7 +166,7 @@ class TypeSafeClient
      * Evaluates the questions declared by a class and returns an instance with the answers.
      *
      * @template TResult of object
-     * @param string|array<mixed>|object $state
+     * @param ValueType $state
      * @param class-string<TResult> $class
      * @return TResult
      */

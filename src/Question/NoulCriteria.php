@@ -32,6 +32,7 @@ use function array_filter;
  * Optional descriptions of what a yes and a no mean.
  *
  * @phpstan-import-type EntryType from Question
+ * @phpstan-import-type ValueType from Question
  */
 class NoulCriteria
 {
@@ -49,7 +50,7 @@ class NoulCriteria
     /**
      * A hook to omit optional descriptions.
      *
-     * @return array<string, EntryType>
+     * @return array<string, ValueType>
      */
     #[VirtualProperty]
     #[Inline]
