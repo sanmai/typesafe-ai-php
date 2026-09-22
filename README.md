@@ -153,7 +153,7 @@ Questions are plain data objects. The client serializes their properties to JSON
 
 ## Examples
 
-Check out the [examples](examples/) directory. Examples read the API key from the `TYPESAFE_API_KEY` environment variable:
+Check out the [examples](examples/) directory. Examples use the API key from the `TYPESAFE_API_KEY` environment variable:
 
 ```bash
 TYPESAFE_API_KEY=your-api-key php examples/urgency.php
