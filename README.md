@@ -61,7 +61,7 @@ class TicketDecision
     ) {}
 }
 
-$decision = $client->evaluate($ticket, TicketDecision::class);
+$decision = $client->evaluate('Help! My payouts have been failing for 3 days.', TicketDecision::class);
 
 $decision->is_urgent->noul;      // 0.95
 $decision->department->choice;   // 'billing'
