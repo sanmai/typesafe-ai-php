@@ -77,6 +77,7 @@ class SystemOneResult
      * @template T of Answer
      * @param class-string<T> $type
      * @return T
+     * @internal
      */
     public function answer(string $id, string $type): Answer
     {
