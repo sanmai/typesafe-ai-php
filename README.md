@@ -1,4 +1,4 @@
-# PHP SDK for TypeSafe's Jev and other TypeSafe AI APIs
+# PHP SDK for TypeSafe's Jev
 
 A PHP client for the [TypeSafe AI](https://docs.typesafe.ai) evaluation API: provide a state and a set of typed questions, get back one typed answer for each question. As easy as that.
 
