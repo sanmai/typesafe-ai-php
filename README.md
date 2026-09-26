@@ -1,14 +1,14 @@
 # PHP SDK for TypeSafe's Jev
 
-A PHP client for the [TypeSafe AI](https://docs.typesafe.ai) evaluation API: provide a state and a set of typed questions, get back one typed answer for each question. As easy as that.
+A PHP client for the [TypeSafe AI](https://docs.typesafe.ai) evaluation model, Jev.
+
+Give Jev a state and a set of typed questions, get back one typed answer for each question. As easy as that.
+
+Tested on PHP 8.2 and later. Install with:
 
 ```bash
 composer require sanmai/typesafe-ai-php
 ```
-
-Requires PHP 8.2 or newer.
-
-**Something amiss?** [Open an issue](https://github.com/sanmai/typesafe-ai-php/issues/new), or, even better, send a PR!
 
 ## Overview
 
