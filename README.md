@@ -217,7 +217,6 @@ There are differences from the TypeSafe API:
 - A yes/no question has the options `no` and `yes`, and a score has the level indices as options. A tie selects the first option in the response.
 - The request model is sent unchanged. llama.cpp ignores it; for other servers, specify it as for the TypeSafe API.
 - The request does not set a temperature or a token limit, so the server defaults apply. A response that stops at the token limit is not valid JSON, and the client throws a JMS `RuntimeException`.
-- If the model writes no probabilities for a question, the client throws `UnexpectedValueException`. This can occur with a server that does not apply the JSON schema.
 
 `createInstance()` takes an optional endpoint and API key, then `$requestOptions` to change the request body. A null value removes a field. For example, to set a token limit, and to remove `model` for a server that rejects it:
 

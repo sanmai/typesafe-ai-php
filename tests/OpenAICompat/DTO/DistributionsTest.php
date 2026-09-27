@@ -24,7 +24,6 @@ namespace Tests\TypeSafeAI\OpenAICompat\DTO;
 use JSONSerializer\Serializer;
 use PHPUnit\Framework\TestCase;
 use TypeSafeAI\OpenAICompat\DTO\Distributions;
-use UnexpectedValueException;
 
 /**
  * @covers \TypeSafeAI\OpenAICompat\DTO\Distributions
@@ -70,7 +69,10 @@ class DistributionsTest extends TestCase
         $distributions = Serializer::withJSONOptions()->deserializeJson($json, Distributions::class);
 
         $this->assertInstanceOf(Distributions::class, $distributions);
-        $this->assertSame($expected, $distributions->distributions);
+
+        foreach ($expected as $id => $probabilities) {
+            $this->assertSame($probabilities, $distributions->probabilities($id));
+        }
     }
 
     public function testProbabilities(): void
@@ -79,15 +81,5 @@ class DistributionsTest extends TestCase
 
         $this->assertSame(['no' => 0.1, 'yes' => 0.9], $distributions->probabilities('is_urgent'));
         $this->assertSame(['no' => 0.5, 'yes' => 0.5], $distributions->probabilities(7));
-    }
-
-    public function testNoProbabilities(): void
-    {
-        $distributions = Distributions::withMap(['is_urgent' => ['no' => 0.1, 'yes' => 0.9]]);
-
-        $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage('No probabilities for "department"');
-
-        $distributions->probabilities('department');
     }
 }

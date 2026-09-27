@@ -23,10 +23,6 @@ namespace TypeSafeAI\OpenAICompat\DTO;
 
 use JSONSerializer\Contracts\ItemMap;
 
-use function sprintf;
-
-use UnexpectedValueException;
-
 /**
  * This class maps each question ID to the probability of each label.
  *
@@ -38,7 +34,7 @@ class Distributions implements ItemMap
      * @param array<array-key, non-empty-array<array-key, float>> $distributions
      */
     private function __construct(
-        public readonly array $distributions,
+        private readonly array $distributions,
     ) {}
 
     public static function getKeyType(): string
@@ -61,10 +57,9 @@ class Distributions implements ItemMap
 
     /**
      * @return non-empty-array<array-key, float> Each label mapped to its probability.
-     * @throws UnexpectedValueException When the model writes no probabilities for the question
      */
     public function probabilities(int|string $id): array
     {
-        return $this->distributions[$id] ?? throw new UnexpectedValueException(sprintf('No probabilities for "%s"', $id));
+        return $this->distributions[$id];
     }
 }

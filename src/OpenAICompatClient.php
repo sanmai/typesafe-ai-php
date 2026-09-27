@@ -51,7 +51,6 @@ use TypeSafeAI\Question\Choice;
 use TypeSafeAI\Question\Noul;
 use TypeSafeAI\Question\Question;
 use TypeSafeAI\Question\Score;
-use UnexpectedValueException;
 
 /**
  * Evaluates questions with a chat model through an OpenAI-compatible API, such as llama.cpp.
@@ -125,7 +124,6 @@ class OpenAICompatClient implements SystemOneClient
      * @throws GuzzleException On an HTTP error
      * @throws RuntimeException When the model writes content that is not JSON
      * @throws InvalidArgumentException When a question type is not supported
-     * @throws UnexpectedValueException When the model writes no probabilities for a question
      */
     public function systemOne(SystemOneRequest $request): SystemOneResult
     {

@@ -72,6 +72,7 @@ class ScoreDecision implements Decision
         $score = 0.0;
         $levels = [];
 
+        // A JSON object has no key order: put the probabilities in level order, as the TypeSafe API returns them
         foreach (array_keys($this->levels) as $level) {
             $levels[$level] = $probabilities[$level];
             $score += $level * $levels[$level];

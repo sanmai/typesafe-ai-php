@@ -40,7 +40,6 @@ use Tests\TypeSafeAI\Doubles\TicketDecision;
 use TypeSafeAI\OpenAICompat\SystemPrompt;
 use TypeSafeAI\OpenAICompatClient;
 use TypeSafeAI\SystemOneRequest;
-use UnexpectedValueException;
 
 /**
  * @covers \TypeSafeAI\OpenAICompatClient
@@ -271,18 +270,6 @@ class OpenAICompatClientTest extends TestCase
         $this->expectException(RuntimeException::class);
 
         $client->systemOne(SystemOneRequest::build('Plain text')->noul('is_urgent', 'Urgent?'));
-    }
-
-    public function testMissingQuestion(): void
-    {
-        $client = $this->client([self::completion(['is_urgent' => ['no' => 0.5, 'yes' => 0.5]])]);
-
-        $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage('No probabilities for "department"');
-
-        $client->systemOne(SystemOneRequest::build('Plain text')
-            ->noul('is_urgent', 'Urgent?')
-            ->choice('department', 'Which team?', ['billing' => null]));
     }
 
     public function testUnsupportedQuestion(): void
