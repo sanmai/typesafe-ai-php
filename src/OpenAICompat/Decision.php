@@ -39,9 +39,7 @@ interface Decision
     public function prompt(): string;
 
     /**
-     * Converts the distribution to an answer, in the JSON format of the TypeSafe API.
-     *
-     * @return array<string, mixed>
+     * Converts the distribution to an answer, as the TypeSafe API returns it.
      */
     public function answer(Distribution $distribution): Answer;
 }
