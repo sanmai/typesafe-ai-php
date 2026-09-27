@@ -209,12 +209,14 @@ There are differences from the TypeSafe API:
 - The model writes the probabilities as text. A distribution is valid if its probabilities sum to 1 within 0.02; the client renormalizes a sum that deviates by more than 0.001. An invalid distribution throws `UnexpectedValueException`.
 - The model receives only its label set: the option names, `no` and `yes`, or the level indices. A tie selects the lexicographically smallest label.
 - The request model is sent unchanged. llama.cpp ignores it; for other servers, specify it as for the TypeSafe API.
+- The request does not limit the number of output tokens, so the server default applies. A response that stops at the token limit is invalid.
 
-`createInstance()` takes an optional API key, then `$requestOptions` to change the request body. A null value removes a field. For example, to disable thinking for a reasoning model with llama.cpp:
+`createInstance()` takes an optional API key, then `$requestOptions` to change the request body. A null value removes a field. For example, to set a token limit, and to remove `temperature` for a server that rejects it:
 
 ```php
 $client = OpenAICompatClient::createInstance('http://127.0.0.1:8080/v1', requestOptions: [
-    'chat_template_kwargs' => ['enable_thinking' => false],
+    'max_tokens' => 16384,
+    'temperature' => null,
 ]);
 ```
 

@@ -155,7 +155,6 @@ class OpenAICompatClientTest extends TestCase
                 ],
             ],
             'temperature' => 0,
-            'max_tokens' => 4096,
         ], $this->requestBody(0));
 
         // A choice option without a description is still an option
@@ -195,7 +194,7 @@ class OpenAICompatClientTest extends TestCase
         $client = $this->client([self::completion(['no' => 0.5, 'yes' => 0.5])], [
             'max_tokens' => 16384,
             'temperature' => null,
-            'chat_template_kwargs' => ['enable_thinking' => false],
+            'chat_template_kwargs' => ['enable_thinking' => true],
         ]);
 
         $client->systemOne(SystemOneRequest::build('Plain text')->noul('is_urgent', 'Urgent?'));
@@ -204,7 +203,7 @@ class OpenAICompatClientTest extends TestCase
 
         $this->assertSame(16384, $body['max_tokens']);
         $this->assertArrayNotHasKey('temperature', $body);
-        $this->assertSame(['enable_thinking' => false], $body['chat_template_kwargs']);
+        $this->assertSame(['enable_thinking' => true], $body['chat_template_kwargs']);
         $this->assertSame('json_schema', $body['response_format']['type']);
     }
 

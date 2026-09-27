@@ -63,8 +63,6 @@ class OpenAICompatClient implements SystemOneClient
 
     private const TIMEOUT = 120;
 
-    private const MAX_TOKENS = 4096;
-
     /**
      * Build a new client instance.
      *
@@ -184,7 +182,6 @@ class OpenAICompatClient implements SystemOneClient
                 'json_schema' => ['name' => 'distribution', 'schema' => self::schema($labels), 'strict' => true],
             ],
             'temperature' => 0,
-            'max_tokens' => self::MAX_TOKENS,
         ], $this->requestOptions), static fn($value) => null !== $value);
     }
 
