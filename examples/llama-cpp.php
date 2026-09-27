@@ -21,7 +21,7 @@ declare(strict_types=1);
 
 // The questions from attributes.php, evaluated by a local model with llama.cpp.
 //
-// Run: LLAMA_CPP_URL=http://127.0.0.1:8080/v1 php examples/llama-cpp.php
+// Run: OPENAI_BASE_URL=http://127.0.0.1:8080/v1 php examples/llama-cpp.php
 
 use TypeSafeAI\DTO\ChoiceAnswer;
 use TypeSafeAI\DTO\NoulAnswer;
@@ -50,7 +50,7 @@ class TicketDecision
     ) {}
 }
 
-$client = OpenAICompatClient::createInstance(getenv('LLAMA_CPP_URL') ?: 'http://127.0.0.1:8080/v1');
+$client = OpenAICompatClient::createInstance();
 
 $decision = $client->evaluate(
     'Help! My payouts have been failing for 3 days.',

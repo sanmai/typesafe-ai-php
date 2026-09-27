@@ -38,6 +38,7 @@ use UnexpectedValueException;
 use function array_fill_keys;
 use function array_filter;
 use function array_merge;
+use function getenv;
 use function json_decode;
 use function json_encode;
 use function rtrim;
@@ -59,6 +60,12 @@ class OpenAICompatClient implements SystemOneClient
 
     public const SYSTEM_PROMPT = "You are a calibration engine. You never answer in prose. You output only a JSON object with the key 'probabilities' mapping every given option to a probability, all options included, values in [0,1], summing to 1.";
 
+    public const BASE_URI = 'https://api.openai.com/v1';
+
+    public const BASE_URL_ENV = 'OPENAI_BASE_URL';
+
+    public const API_KEY_ENV = 'OPENAI_API_KEY';
+
     private const CHAT_COMPLETIONS = 'chat/completions';
 
     private const TIMEOUT = 120;
@@ -66,16 +73,20 @@ class OpenAICompatClient implements SystemOneClient
     /**
      * Build a new client instance.
      *
-     * @param string $endpoint The API root with the version, such as http://127.0.0.1:8080/v1
+     * @param string|null $endpoint The API root with the version, such as http://127.0.0.1:8080/v1; read from OPENAI_BASE_URL when null
+     * @param string|null $apiKey Read from OPENAI_API_KEY when null; no key is sent when neither is set
      * @param array<string, mixed> $requestOptions Fields to add to each request body; a null value removes the field
      * @param array<string, mixed> $clientOptions Extra Guzzle client options (timeout, headers, etc.) merged after defaults
      */
     public static function createInstance(
-        string $endpoint,
+        ?string $endpoint = null,
         ?string $apiKey = null,
         array $requestOptions = [],
         array $clientOptions = [],
     ): self {
+        $endpoint ??= getenv(self::BASE_URL_ENV) ?: self::BASE_URI;
+        $apiKey ??= getenv(self::API_KEY_ENV) ?: null;
+
         $httpClient = new Client(array_merge([
             'base_uri' => rtrim($endpoint, '/') . '/',
             'timeout' => self::TIMEOUT,

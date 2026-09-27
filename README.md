@@ -201,6 +201,12 @@ $decision = $client->evaluate($ticket, TicketDecision::class);
 $response = $client->systemOne($request);
 ```
 
+Without arguments, the client reads `OPENAI_BASE_URL` and `OPENAI_API_KEY`, the same variables as the OpenAI SDKs. Without `OPENAI_BASE_URL`, it uses the OpenAI API. The API key is optional: without one, the client sends no `Authorization` header.
+
+```php
+$client = OpenAICompatClient::createInstance();
+```
+
 Both clients implement `TypeSafeAI\SystemOneClient`: type-hint against it to change the backend without other changes.
 
 There are differences from the TypeSafe API:
@@ -211,7 +217,7 @@ There are differences from the TypeSafe API:
 - The request model is sent unchanged. llama.cpp ignores it; for other servers, specify it as for the TypeSafe API.
 - The request does not set a temperature or a token limit, so the server defaults apply. A response that stops at the token limit is invalid.
 
-`createInstance()` takes an optional API key, then `$requestOptions` to change the request body. A null value removes a field. For example, to set a token limit, and to remove `model` for a server that rejects it:
+`createInstance()` takes an optional endpoint and API key, then `$requestOptions` to change the request body. A null value removes a field. For example, to set a token limit, and to remove `model` for a server that rejects it:
 
 ```php
 $client = OpenAICompatClient::createInstance('http://127.0.0.1:8080/v1', requestOptions: [

@@ -36,6 +36,7 @@ use UnexpectedValueException;
 
 use function json_decode;
 use function json_encode;
+use function putenv;
 
 /**
  * @covers \TypeSafeAI\OpenAICompatClient
@@ -72,16 +73,59 @@ class OpenAICompatClientTest extends TestCase
         return json_decode((string) $this->requests[$index]['request']->getBody(), true);
     }
 
-    public function testCreateInstance(): void
+    public static function provideEnvironments(): iterable
     {
-        /** @var Client $httpClient */
-        $httpClient = $this->getPropertyValue(OpenAICompatClient::createInstance('http://127.0.0.1:8080/v1/'), 'client');
+        yield 'defaults' => [[], [], 'https://api.openai.com/v1/', null];
 
-        $this->assertSame('http://127.0.0.1:8080/v1/', (string) $httpClient->getConfig('base_uri'));
+        yield 'environment' => [
+            ['OPENAI_BASE_URL=http://127.0.0.1:4000/v1', 'OPENAI_API_KEY=from-env'],
+            [],
+            'http://127.0.0.1:4000/v1/',
+            'Bearer from-env',
+        ];
+
+        yield 'arguments over environment' => [
+            ['OPENAI_BASE_URL=http://127.0.0.1:4000/v1', 'OPENAI_API_KEY=from-env'],
+            ['http://127.0.0.1:8080/v1/', 'secret'],
+            'http://127.0.0.1:8080/v1/',
+            'Bearer secret',
+        ];
+
+        yield 'endpoint from environment, key from argument' => [
+            ['OPENAI_BASE_URL=http://127.0.0.1:4000/v1'],
+            [null, 'secret'],
+            'http://127.0.0.1:4000/v1/',
+            'Bearer secret',
+        ];
+    }
+
+    /**
+     * @dataProvider provideEnvironments
+     * @param list<string> $environment
+     * @param list<?string> $arguments
+     */
+    public function testCreateInstance(array $environment, array $arguments, string $baseUri, ?string $authorization): void
+    {
+        putenv('OPENAI_BASE_URL');
+        putenv('OPENAI_API_KEY');
+
+        foreach ($environment as $setting) {
+            putenv($setting);
+        }
+
+        try {
+            /** @var Client $httpClient */
+            $httpClient = $this->getPropertyValue(OpenAICompatClient::createInstance(...$arguments), 'client');
+        } finally {
+            putenv('OPENAI_BASE_URL');
+            putenv('OPENAI_API_KEY');
+        }
+
+        $this->assertSame($baseUri, (string) $httpClient->getConfig('base_uri'));
+        $this->assertSame($authorization, $httpClient->getConfig('headers')['Authorization'] ?? null);
         $this->assertSame(120, $httpClient->getConfig('timeout'));
         $this->assertTrue($httpClient->getConfig('http_errors'));
         $this->assertFalse($httpClient->getConfig('allow_redirects'));
-        $this->assertArrayNotHasKey('Authorization', $httpClient->getConfig('headers'));
     }
 
     public function testSystemOne(): void

@@ -47,7 +47,7 @@ End-user documentation:
 - **JMS attributes**: Use PHP attributes such as `#[Type(...)]` for JMS serializer metadata. Keep PHPDoc like `@var` where it provides static-analysis detail.
 - **Serializer property names**: The JSON serializer uses JMS' `IdenticalPropertyNamingStrategy`, so DTO property names must match API field names unless a `#[SerializedName(...)]` override is added.
 - **Retries**: `408`, `429`, and every `5xx` response, plus connection timeouts, are retried twice by `GuzzleRetryMiddleware`. Other HTTP errors throw Guzzle exceptions. `OpenAICompatClient` does not retry.
-- **Environment**: `createInstance()` defaults to `TYPESAFE_API_KEY` and `TYPESAFE_BASE_URL`, the names the other SDKs use. There is no default-model variable: the model is a property of the request.
+- **Environment**: `createInstance()` defaults to `TYPESAFE_API_KEY` and `TYPESAFE_BASE_URL`, the names the other SDKs use. `OpenAICompatClient::createInstance()` defaults to `OPENAI_BASE_URL` and `OPENAI_API_KEY`, the names the OpenAI SDKs use. There is no default-model variable: the model is a property of the request.
 
 ## Development Workflow
 
