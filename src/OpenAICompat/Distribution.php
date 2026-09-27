@@ -50,6 +50,18 @@ class Distribution
 
     private const TOLERANCE = 0.02;
 
+    private const SCHEMA = [
+        'type' => 'object',
+        'properties' => [
+            'probabilities' => [
+                'type' => 'object',
+                'additionalProperties' => false,
+            ],
+        ],
+        'required' => ['probabilities'],
+        'additionalProperties' => false,
+    ];
+
     /**
      * @param non-empty-array<array-key, float> $probabilities Each label mapped to its probability, in label order.
      */
@@ -63,20 +75,12 @@ class Distribution
      */
     public static function schema(array $labels): array
     {
-        return [
-            'type' => 'object',
-            'properties' => [
-                'probabilities' => [
-                    'type' => 'object',
-                    // An object also for the level indices of a score
-                    'properties' => (object) array_fill_keys($labels, ['type' => 'number']),
-                    'required' => $labels,
-                    'additionalProperties' => false,
-                ],
-            ],
-            'required' => ['probabilities'],
-            'additionalProperties' => false,
-        ];
+        $schema = self::SCHEMA;
+        // An object also for the level indices of a score
+        $schema['properties']['probabilities']['properties'] = (object) array_fill_keys($labels, ['type' => 'number']);
+        $schema['properties']['probabilities']['required'] = $labels;
+
+        return $schema;
     }
 
     /**

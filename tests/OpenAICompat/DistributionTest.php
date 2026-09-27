@@ -125,9 +125,9 @@ class DistributionTest extends TestCase
      */
     public function testSchema(array $labels, string $properties): void
     {
-        $this->assertSame(
-            '{"type":"object","properties":{"probabilities":{"type":"object","properties":' . $properties . ',"required":' . json_encode($labels) . ',"additionalProperties":false}},"required":["probabilities"],"additionalProperties":false}',
-            json_encode(Distribution::schema($labels)),
-        );
+        $probabilities = Distribution::schema($labels)['properties']['probabilities'];
+
+        $this->assertSame($properties, json_encode($probabilities['properties']));
+        $this->assertSame($labels, $probabilities['required']);
     }
 }

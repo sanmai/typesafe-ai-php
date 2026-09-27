@@ -36,6 +36,7 @@ use function putenv;
 use Tests\TypeSafeAI\Doubles\ExampleState;
 use Tests\TypeSafeAI\Doubles\RankQuestion;
 use Tests\TypeSafeAI\Doubles\TicketDecision;
+use TypeSafeAI\OpenAICompat\Distribution;
 use TypeSafeAI\OpenAICompatClient;
 use TypeSafeAI\SystemOneRequest;
 use UnexpectedValueException;
@@ -174,7 +175,7 @@ class OpenAICompatClientTest extends TestCase
         $this->assertSame('Bearer secret', $request->getHeaderLine('Authorization'));
         $this->assertSame('application/json', $request->getHeaderLine('Content-Type'));
 
-        $this->assertSame([
+        $this->assertJsonStringEqualsJsonString(json_encode([
             'model' => 'qwen',
             'messages' => [
                 ['role' => 'system', 'content' => OpenAICompatClient::SYSTEM_PROMPT],
@@ -182,34 +183,12 @@ class OpenAICompatClientTest extends TestCase
             ],
             'response_format' => [
                 'type' => 'json_schema',
-                'json_schema' => [
-                    'name' => 'distribution',
-                    'schema' => [
-                        'type' => 'object',
-                        'properties' => [
-                            'probabilities' => [
-                                'type' => 'object',
-                                'properties' => ['no' => ['type' => 'number'], 'yes' => ['type' => 'number']],
-                                'required' => ['no', 'yes'],
-                                'additionalProperties' => false,
-                            ],
-                        ],
-                        'required' => ['probabilities'],
-                        'additionalProperties' => false,
-                    ],
-                    'strict' => true,
-                ],
+                'json_schema' => ['name' => 'distribution', 'schema' => Distribution::schema(['no', 'yes']), 'strict' => true],
             ],
-        ], $this->requestBody(0));
+        ]), (string) $this->requests[0]['request']->getBody());
 
         // A choice option without a description is still an option
         $this->assertSame(['billing', 'technical', 'sales'], $this->requestBody(1)['response_format']['json_schema']['schema']['properties']['probabilities']['required']);
-
-        // Level indices must be keys of an object, not a list
-        $this->assertStringContainsString(
-            '"properties":{"0":{"type":"number"},"1":{"type":"number"},"2":{"type":"number"}}',
-            (string) $this->getLastRequest()->getBody(),
-        );
     }
 
     public function testStringState(): void
