@@ -25,9 +25,9 @@ use function array_keys;
 use function array_map;
 use function array_values;
 use function implode;
+use function max;
 
 use TypeSafeAI\DTO\ScoreAnswer;
-use TypeSafeAI\OpenAICompat\Distribution;
 use TypeSafeAI\OpenAICompat\Text;
 use TypeSafeAI\Question\Score;
 use TypeSafeAI\SystemOneRequest;
@@ -64,25 +64,24 @@ class ScoreDecision implements Decision
         }
 
         return $this->text->of($this->question->instructions)
-            . "\n\nLevels:\n" . implode("\n", $lines)
-            . "\n\nRate the state. Output probabilities over the level indices: " . Labels::json($this->labels()) . '.';
+            . "\n\nLevels:\n" . implode("\n", $lines);
     }
 
-    public function answer(Distribution $distribution): ScoreAnswer
+    public function answer(array $probabilities): ScoreAnswer
     {
         $score = 0.0;
-        $probabilities = [];
+        $levels = [];
 
         foreach (array_keys($this->levels) as $level) {
-            $probabilities[$level] = $distribution->probabilities[$level];
-            $score += $level * $probabilities[$level];
+            $levels[$level] = $probabilities[$level];
+            $score += $level * $levels[$level];
         }
 
         $answer = new ScoreAnswer();
         $answer->score = $score;
         $answer->legend = $this->levels;
-        $answer->probabilities = $probabilities;
-        $answer->confidence = $distribution->confidence();
+        $answer->probabilities = $levels;
+        $answer->confidence = max($probabilities);
 
         return $answer;
     }

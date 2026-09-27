@@ -22,7 +22,6 @@ declare(strict_types=1);
 namespace TypeSafeAI\OpenAICompat\Decision;
 
 use TypeSafeAI\DTO\NoulAnswer;
-use TypeSafeAI\OpenAICompat\Distribution;
 use TypeSafeAI\OpenAICompat\Text;
 use TypeSafeAI\Question\Choice;
 use TypeSafeAI\Question\Noul;
@@ -54,10 +53,10 @@ class NoulDecision implements Decision
         return $this->choice->prompt();
     }
 
-    public function answer(Distribution $distribution): NoulAnswer
+    public function answer(array $probabilities): NoulAnswer
     {
         $answer = new NoulAnswer();
-        $answer->noul = $distribution->probabilities['yes'];
+        $answer->noul = $probabilities['yes'];
 
         return $answer;
     }

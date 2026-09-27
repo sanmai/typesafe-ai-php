@@ -22,7 +22,6 @@ declare(strict_types=1);
 namespace TypeSafeAI\OpenAICompat\Decision;
 
 use TypeSafeAI\DTO\Answer;
-use TypeSafeAI\OpenAICompat\Distribution;
 
 /**
  * Presents a question to a chat model as a distribution over a label set.
@@ -35,12 +34,14 @@ interface Decision
     public function labels(): array;
 
     /**
-     * Returns the question part of the user message.
+     * Returns the question section of the user message.
      */
     public function prompt(): string;
 
     /**
-     * Converts the distribution to an answer, as the TypeSafe API returns it.
+     * Converts the probabilities to an answer, as the TypeSafe API returns it.
+     *
+     * @param non-empty-array<array-key, float> $probabilities Each label mapped to its probability.
      */
-    public function answer(Distribution $distribution): Answer;
+    public function answer(array $probabilities): Answer;
 }

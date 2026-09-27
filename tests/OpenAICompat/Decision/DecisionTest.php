@@ -33,7 +33,6 @@ use PHPUnit\Framework\TestCase;
 use TypeSafeAI\OpenAICompat\Decision\ChoiceDecision;
 use TypeSafeAI\OpenAICompat\Decision\NoulDecision;
 use TypeSafeAI\OpenAICompat\Decision\ScoreDecision;
-use TypeSafeAI\OpenAICompat\Distribution;
 use TypeSafeAI\OpenAICompat\Text;
 use TypeSafeAI\Question\Choice;
 use TypeSafeAI\Question\Noul;
@@ -45,7 +44,6 @@ use TypeSafeAI\Question\Score;
  * @covers \TypeSafeAI\OpenAICompat\Decision\NoulDecision
  * @covers \TypeSafeAI\OpenAICompat\Decision\ScoreDecision
  * @covers \TypeSafeAI\OpenAICompat\Text
- * @covers \TypeSafeAI\OpenAICompat\Decision\Labels
  */
 class DecisionTest extends TestCase
 {
@@ -61,7 +59,7 @@ class DecisionTest extends TestCase
                 'other' => 'None of these actions is requested',
             ]), $text),
             ['cancel', 'refund', 'status', 'change_address', 'other'],
-            "Select the primary requested action. A mention without a request does not establish intent.\n\nOptions:\n- cancel: End an existing subscription\n- refund: Return money already charged\n- status: Learn delivery progress\n- change_address: Modify a delivery address\n- other: None of these actions is requested\n\nOutput probabilities over exactly these keys: [\"cancel\", \"refund\", \"status\", \"change_address\", \"other\"].",
+            "Select the primary requested action. A mention without a request does not establish intent.\n\nOptions:\n- cancel: End an existing subscription\n- refund: Return money already charged\n- status: Learn delivery progress\n- change_address: Modify a delivery address\n- other: None of these actions is requested",
         ];
 
         yield 'score' => [
@@ -72,19 +70,19 @@ class DecisionTest extends TestCase
                 'Confirmed irreversible data loss or physical harm',
             ]), $text),
             ['0', '1', '2', '3'],
-            "Rate incident impact using only reported facts. Use the highest fully supported level.\n\nLevels:\n0: No function impaired; cosmetic only\n1: One user or a nonessential function impaired, with a workaround\n2: Many users blocked from a core function, no data loss\n3: Confirmed irreversible data loss or physical harm\n\nRate the state. Output probabilities over the level indices: [\"0\", \"1\", \"2\", \"3\"].",
+            "Rate incident impact using only reported facts. Use the highest fully supported level.\n\nLevels:\n0: No function impaired; cosmetic only\n1: One user or a nonessential function impaired, with a workaround\n2: Many users blocked from a core function, no data loss\n3: Confirmed irreversible data loss or physical harm",
         ];
 
         yield 'noul' => [
             static fn(Text $text) => new NoulDecision(new Noul('Is the action permitted?', new NoulCriteria(true: 'Every condition holds', false: 'A condition is missing')), $text),
             ['no', 'yes'],
-            "Is the action permitted?\n\nOptions:\n- no: A condition is missing\n- yes: Every condition holds\n\nOutput probabilities over exactly these keys: [\"no\", \"yes\"].",
+            "Is the action permitted?\n\nOptions:\n- no: A condition is missing\n- yes: Every condition holds",
         ];
 
         yield 'noul without criteria' => [
             static fn(Text $text) => new NoulDecision(new Noul('Is it urgent?'), $text),
             ['no', 'yes'],
-            "Is it urgent?\n\nOptions:\n- no\n- yes\n\nOutput probabilities over exactly these keys: [\"no\", \"yes\"].",
+            "Is it urgent?\n\nOptions:\n- no\n- yes",
         ];
 
         yield 'structured values' => [
@@ -97,19 +95,19 @@ class DecisionTest extends TestCase
                 '42' => 'Numeric label',
             ]), $text),
             ['billing', 'technical', 'other', 'ключ', 'n/a', '42'],
-            "{\"ask\":\"Which team?\"}\n\nOptions:\n- billing: {\"what\":\"Счета / charges\"}\n- technical\n- other\n- ключ: Non-ASCII label\n- n/a\n- 42: Numeric label\n\nOutput probabilities over exactly these keys: [\"billing\", \"technical\", \"other\", \"\\u043a\\u043b\\u044e\\u0447\", \"n/a\", \"42\"].",
+            "{\"ask\":\"Which team?\"}\n\nOptions:\n- billing: {\"what\":\"Счета / charges\"}\n- technical\n- other\n- ключ: Non-ASCII label\n- n/a\n- 42: Numeric label",
         ];
 
         yield 'score with keys' => [
             static fn(Text $text) => new ScoreDecision(new Score('How loud?', ['low' => 'Quiet', 'high' => 'Loud']), $text),
             ['0', '1'],
-            "How loud?\n\nLevels:\n0: Quiet\n1: Loud\n\nRate the state. Output probabilities over the level indices: [\"0\", \"1\"].",
+            "How loud?\n\nLevels:\n0: Quiet\n1: Loud",
         ];
 
         yield 'score without instructions' => [
             static fn(Text $text) => new ScoreDecision(new Score(null, ['Calm', ['level' => 'Angry']]), $text),
             ['0', '1'],
-            "\n\nLevels:\n0: Calm\n1: {\"level\":\"Angry\"}\n\nRate the state. Output probabilities over the level indices: [\"0\", \"1\"].",
+            "\n\nLevels:\n0: Calm\n1: {\"level\":\"Angry\"}",
         ];
     }
 
@@ -136,7 +134,7 @@ class DecisionTest extends TestCase
 
         $this->assertSame(
             ['type' => 'noul', 'noul' => 0.9],
-            get_object_vars($decision->answer(Distribution::of(['probabilities' => ['no' => 0.1, 'yes' => 0.9]], $decision->labels()))),
+            get_object_vars($decision->answer(['no' => 0.1, 'yes' => 0.9])),
         );
     }
 
@@ -145,8 +143,8 @@ class DecisionTest extends TestCase
         $decision = new ChoiceDecision(new Choice('Which team?', ['billing' => null, 'technical' => null]), self::text());
 
         $this->assertSame(
-            ['type' => 'choice', 'choice' => 'technical', 'probabilities' => ['billing' => 0.3, 'technical' => 0.7], 'confidence' => 0.7],
-            get_object_vars($decision->answer(Distribution::of(['probabilities' => ['technical' => 0.7, 'billing' => 0.3]], $decision->labels()))),
+            ['type' => 'choice', 'choice' => 'technical', 'probabilities' => ['technical' => 0.7, 'billing' => 0.3], 'confidence' => 0.7],
+            get_object_vars($decision->answer(['technical' => 0.7, 'billing' => 0.3])),
         );
     }
 
@@ -162,7 +160,7 @@ class DecisionTest extends TestCase
                 'probabilities' => [0.1, 0.5, 0.4],
                 'confidence' => 0.5,
             ],
-            get_object_vars($decision->answer(Distribution::of(['probabilities' => ['0' => 0.1, '1' => 0.5, '2' => 0.4]], $decision->labels()))),
+            get_object_vars($decision->answer([0.1, 0.5, 0.4])),
         );
     }
 }

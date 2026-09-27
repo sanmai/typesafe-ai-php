@@ -57,11 +57,14 @@ $client = match ((bool) getenv('OPENAI_BASE_URL')) {
     default => TypeSafeClient::createInstance(),
 };
 
+$state = 'Help! My payouts have been failing for 3 days.';
+
 $decision = $client->evaluate(
-    'Help! My payouts have been failing for 3 days.',
+    $state,
     TicketDecision::class,
 );
 
+printf("State:       %s\n", $state);
 printf("Urgent:      %.2f\n", $decision->is_urgent->noul);
 printf("Route to:    %s (confidence %.2f)\n", $decision->department->choice, $decision->department->confidence);
 printf("Frustration: %.2f\n", $decision->frustration->score);

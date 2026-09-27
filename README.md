@@ -211,11 +211,11 @@ Both clients implement `TypeSafeAI\SystemOneClient`: type-hint against it to cha
 
 There are differences from the TypeSafe API:
 
-- The client sends one request for each question, without retries. The timeout is 120 seconds.
-- The model writes the probabilities as text. A distribution is valid if its probabilities sum to 1 within 0.02; the client renormalizes a sum that deviates by more than 0.001. An invalid distribution throws `UnexpectedValueException`.
-- The model receives only its label set: the option names, `no` and `yes`, or the level indices. A tie selects the lexicographically smallest label.
+- The client sends all questions in one request, without retries. The timeout is 120 seconds.
+- A JSON schema sets the shape of the response: a probability for each option of each question. The client uses the probabilities unchanged, as it does with the TypeSafe API.
+- A yes/no question has the options `no` and `yes`, and a score has the level indices as options. A tie selects the first option in the response.
 - The request model is sent unchanged. llama.cpp ignores it; for other servers, specify it as for the TypeSafe API.
-- The request does not set a temperature or a token limit, so the server defaults apply. A response that stops at the token limit is invalid.
+- The request does not set a temperature or a token limit, so the server defaults apply. A response that stops at the token limit is not valid JSON, and the client throws a JMS `RuntimeException`.
 
 `createInstance()` takes an optional endpoint and API key, then `$requestOptions` to change the request body. A null value removes a field. For example, to set a token limit, and to remove `model` for a server that rejects it:
 
@@ -225,8 +225,6 @@ $client = OpenAICompatClient::createInstance('http://127.0.0.1:8080/v1', request
     'model' => null,
 ]);
 ```
-
-The prompts and the validation follow the `openai_compat` route of [JevBench](https://github.com/fstandhartinger/jevbench).
 
 ## Examples
 

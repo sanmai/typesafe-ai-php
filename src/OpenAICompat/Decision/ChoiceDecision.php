@@ -23,10 +23,11 @@ namespace TypeSafeAI\OpenAICompat\Decision;
 
 use function array_keys;
 use function array_map;
+use function array_search;
 use function implode;
+use function max;
 
 use TypeSafeAI\DTO\ChoiceAnswer;
-use TypeSafeAI\OpenAICompat\Distribution;
 use TypeSafeAI\OpenAICompat\Text;
 use TypeSafeAI\Question\Choice;
 
@@ -55,16 +56,15 @@ class ChoiceDecision implements Decision
         }
 
         return $this->text->of($this->question->instructions)
-            . "\n\nOptions:\n" . implode("\n", $lines)
-            . "\n\nOutput probabilities over exactly these keys: " . Labels::json($this->labels()) . '.';
+            . "\n\nOptions:\n" . implode("\n", $lines);
     }
 
-    public function answer(Distribution $distribution): ChoiceAnswer
+    public function answer(array $probabilities): ChoiceAnswer
     {
         $answer = new ChoiceAnswer();
-        $answer->choice = $distribution->argmax();
-        $answer->probabilities = $distribution->probabilities;
-        $answer->confidence = $distribution->confidence();
+        $answer->confidence = max($probabilities);
+        $answer->choice = (string) array_search($answer->confidence, $probabilities, true);
+        $answer->probabilities = $probabilities;
 
         return $answer;
     }

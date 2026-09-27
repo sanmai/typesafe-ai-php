@@ -21,6 +21,8 @@ declare(strict_types=1);
 
 namespace Tests\TypeSafeAI;
 
+use function array_fill_keys;
+
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ServerException;
 use GuzzleHttp\Handler\MockHandler;
@@ -28,6 +30,7 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
+use JMS\Serializer\Exception\RuntimeException;
 
 use function json_decode;
 use function json_encode;
@@ -36,10 +39,8 @@ use function putenv;
 use Tests\TypeSafeAI\Doubles\ExampleState;
 use Tests\TypeSafeAI\Doubles\RankQuestion;
 use Tests\TypeSafeAI\Doubles\TicketDecision;
-use TypeSafeAI\OpenAICompat\Distribution;
 use TypeSafeAI\OpenAICompatClient;
 use TypeSafeAI\SystemOneRequest;
-use UnexpectedValueException;
 
 /**
  * @covers \TypeSafeAI\OpenAICompatClient
@@ -58,14 +59,17 @@ class OpenAICompatClientTest extends TestCase
         return OpenAICompatClient::createInstance('http://127.0.0.1:8080/v1', 'secret', $requestOptions, ['handler' => $stack]);
     }
 
-    private static function completion(array $probabilities, int $input = 100, int $output = 10): Response
+    /**
+     * @param array<string, array<string, float>> $distributions Each question ID mapped to its probabilities.
+     */
+    private static function completion(array $distributions, int $input = 100, int $output = 10): Response
     {
         return new Response(200, ['Content-Type' => 'application/json'], json_encode([
             'model' => 'Default',
             'choices' => [[
                 'index' => 0,
                 'finish_reason' => 'stop',
-                'message' => ['role' => 'assistant', 'content' => json_encode(['probabilities' => $probabilities])],
+                'message' => ['role' => 'assistant', 'content' => json_encode($distributions)],
             ]],
             'usage' => ['prompt_tokens' => $input, 'completion_tokens' => $output, 'total_tokens' => $input + $output],
         ]));
@@ -133,11 +137,11 @@ class OpenAICompatClientTest extends TestCase
 
     public function testSystemOne(): void
     {
-        $client = $this->client([
-            self::completion(['no' => 0.1, 'yes' => 0.9], 150, 20),
-            self::completion(['billing' => 0.2, 'technical' => 0.8, 'sales' => 0.0], 160, 30),
-            self::completion(['0' => 0.1, '1' => 0.2, '2' => 0.7], 170, 40),
-        ]);
+        $client = $this->client([self::completion([
+            'is_urgent' => ['no' => 0.1, 'yes' => 0.9],
+            'department' => ['billing' => 0.2, 'technical' => 0.8, 'sales' => 0.0],
+            'frustration' => ['0' => 0.1, '1' => 0.2, '2' => 0.7],
+        ], 150, 20)]);
 
         $response = $client->systemOne(
             SystemOneRequest::build(['message' => 'Help! My payouts have been failing for 3 days.'], 'qwen')
@@ -151,8 +155,8 @@ class OpenAICompatClientTest extends TestCase
         );
 
         $this->assertSame('Default', $response->model);
-        $this->assertSame(480, $response->usage->input_tokens);
-        $this->assertSame(90, $response->usage->output_tokens);
+        $this->assertSame(150, $response->usage->input_tokens);
+        $this->assertSame(20, $response->usage->output_tokens);
 
         $this->assertSame(0.9, $response->noul('is_urgent')->noul);
 
@@ -168,6 +172,7 @@ class OpenAICompatClientTest extends TestCase
         $this->assertSame(0.7, $frustration->confidence);
 
         $this->assertCount(0, $this->mock);
+        $this->assertCount(1, $this->requests);
 
         $request = $this->getLastRequest();
         $this->assertSame('POST', $request->getMethod());
@@ -179,43 +184,56 @@ class OpenAICompatClientTest extends TestCase
             'model' => 'qwen',
             'messages' => [
                 ['role' => 'system', 'content' => OpenAICompatClient::SYSTEM_PROMPT],
-                ['role' => 'user', 'content' => "State:\n{\"message\":\"Help! My payouts have been failing for 3 days.\"}\n\nDoes this convey urgency?\n\nOptions:\n- no\n- yes: Explicitly time-sensitive\n\nOutput probabilities over exactly these keys: [\"no\", \"yes\"]."],
+                ['role' => 'user', 'content' => "# State\n\n{\"message\":\"Help! My payouts have been failing for 3 days.\"}\n\n"
+                    . "# Question is_urgent\n\nDoes this convey urgency?\n\nOptions:\n- no\n- yes: Explicitly time-sensitive\n\n"
+                    . "# Question department\n\nWhich team should handle this?\n\nOptions:\n- billing: Payments, invoicing, refunds\n- technical: Bugs, outages, integrations\n- sales\n\n"
+                    . "# Question frustration\n\nHow frustrated is the customer?\n\nLevels:\n0: Calm\n1: Frustrated\n2: Very angry"],
             ],
             'response_format' => [
                 'type' => 'json_schema',
-                'json_schema' => ['name' => 'distribution', 'schema' => Distribution::schema(['no', 'yes']), 'strict' => true],
+                'json_schema' => ['name' => 'distributions', 'schema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'is_urgent' => self::schema(['no', 'yes']),
+                        // A choice option without a description is still an option
+                        'department' => self::schema(['billing', 'technical', 'sales']),
+                        'frustration' => self::schema(['0', '1', '2']),
+                    ],
+                    'required' => ['is_urgent', 'department', 'frustration'],
+                    'additionalProperties' => false,
+                ], 'strict' => true],
             ],
-        ]), (string) $this->requests[0]['request']->getBody());
+        ]), (string) $this->getLastRequest()->getBody());
+    }
 
-        // A choice option without a description is still an option
-        $this->assertSame(['billing', 'technical', 'sales'], $this->requestBody(1)['response_format']['json_schema']['schema']['properties']['probabilities']['required']);
+    /**
+     * @param list<string> $labels
+     */
+    private static function schema(array $labels): array
+    {
+        return [
+            'type' => 'object',
+            'properties' => array_fill_keys($labels, ['type' => 'number']),
+            'required' => $labels,
+            'additionalProperties' => false,
+        ];
     }
 
     public function testStringState(): void
     {
-        $client = $this->client([self::completion(['no' => 0.5, 'yes' => 0.5])]);
+        $client = $this->client([self::completion(['is_urgent' => ['no' => 0.5, 'yes' => 0.5]])]);
 
         $client->systemOne(SystemOneRequest::build('Plain text')->noul('is_urgent', 'Urgent?'));
 
         $this->assertSame(
-            "State:\nPlain text\n\nUrgent?\n\nOptions:\n- no\n- yes\n\nOutput probabilities over exactly these keys: [\"no\", \"yes\"].",
+            "# State\n\nPlain text\n\n# Question is_urgent\n\nUrgent?\n\nOptions:\n- no\n- yes",
             $this->requestBody(0)['messages'][1]['content'],
         );
     }
 
-    public function testNoQuestions(): void
-    {
-        $response = $this->client([])->systemOne(SystemOneRequest::build('Plain text', 'qwen'));
-
-        $this->assertSame('qwen', $response->model);
-        $this->assertSame([], $response->answers);
-        $this->assertSame(0, $response->usage->input_tokens);
-        $this->assertSame(0, $response->usage->output_tokens);
-    }
-
     public function testRequestOptions(): void
     {
-        $client = $this->client([self::completion(['no' => 0.5, 'yes' => 0.5])], [
+        $client = $this->client([self::completion(['is_urgent' => ['no' => 0.5, 'yes' => 0.5]])], [
             'max_tokens' => 16384,
             'model' => null,
             'chat_template_kwargs' => ['enable_thinking' => true],
@@ -233,11 +251,11 @@ class OpenAICompatClientTest extends TestCase
 
     public function testEvaluate(): void
     {
-        $client = $this->client([
-            self::completion(['no' => 0.1, 'yes' => 0.9]),
-            self::completion(['billing' => 0.2, 'technical' => 0.8, 'sales' => 0.0]),
-            self::completion(['0' => 0.1, '1' => 0.2, '2' => 0.7]),
-        ]);
+        $client = $this->client([self::completion([
+            'is_urgent' => ['no' => 0.1, 'yes' => 0.9],
+            'department' => ['billing' => 0.2, 'technical' => 0.8, 'sales' => 0.0],
+            'frustration' => ['0' => 0.1, '1' => 0.2, '2' => 0.7],
+        ])]);
 
         $decision = $client->evaluate('Help!', TicketDecision::class, 'qwen');
 
@@ -246,16 +264,6 @@ class OpenAICompatClientTest extends TestCase
         $this->assertSame('technical', $decision->department->choice);
         $this->assertSame(0.7, $decision->frustration->confidence);
         $this->assertSame('qwen', $this->requestBody(0)['model']);
-    }
-
-    public function testInvalidDistribution(): void
-    {
-        $client = $this->client([self::completion(['no' => 0.5, 'yes' => 0.6])]);
-
-        $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage('Probabilities sum to 1.1');
-
-        $client->systemOne(SystemOneRequest::build('Plain text')->noul('is_urgent', 'Urgent?'));
     }
 
     public static function provideUndecodableContent(): iterable
@@ -275,21 +283,20 @@ class OpenAICompatClientTest extends TestCase
             'usage' => ['prompt_tokens' => 1, 'completion_tokens' => 1],
         ]))]);
 
-        $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage("Expected a JSON object, got $content");
+        $this->expectException(RuntimeException::class);
 
         $client->systemOne(SystemOneRequest::build('Plain text')->noul('is_urgent', 'Urgent?'));
     }
 
     public function testObjectState(): void
     {
-        $client = $this->client([self::completion(['no' => 0.5, 'yes' => 0.5])]);
+        $client = $this->client([self::completion(['is_urgent' => ['no' => 0.5, 'yes' => 0.5]])]);
 
         $client->systemOne(SystemOneRequest::build(new ExampleState())->noul('is_urgent', 'Urgent?'));
 
         // Private properties and nulls, as TypeSafeClient sends them
         $this->assertStringStartsWith(
-            "State:\n{\"id\":42,\"assignee\":null,\"secret\":\"private properties are sent too\"}\n\n",
+            "# State\n\n{\"id\":42,\"assignee\":null,\"secret\":\"private properties are sent too\"}\n\n",
             $this->requestBody(0)['messages'][1]['content'],
         );
     }
@@ -306,7 +313,7 @@ class OpenAICompatClientTest extends TestCase
 
     public function testErrorsAreNotRetried(): void
     {
-        $client = $this->client([new Response(503), self::completion(['no' => 0.5, 'yes' => 0.5])]);
+        $client = $this->client([new Response(503), self::completion(['is_urgent' => ['no' => 0.5, 'yes' => 0.5]])]);
 
         try {
             $client->systemOne(SystemOneRequest::build('Plain text')->noul('is_urgent', 'Urgent?'));

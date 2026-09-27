@@ -21,13 +21,19 @@ declare(strict_types=1);
 
 namespace TypeSafeAI;
 
+use function array_fill_keys;
 use function array_filter;
+use function array_keys;
+use function array_map;
 use function array_merge;
 use function get_debug_type;
 use function getenv;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+
+use function implode;
+
 use InvalidArgumentException;
 use JMS\Serializer\Exception\RuntimeException;
 use JMS\Serializer\SerializerInterface;
@@ -41,26 +47,23 @@ use TypeSafeAI\OpenAICompat\Decision\ChoiceDecision;
 use TypeSafeAI\OpenAICompat\Decision\Decision;
 use TypeSafeAI\OpenAICompat\Decision\NoulDecision;
 use TypeSafeAI\OpenAICompat\Decision\ScoreDecision;
-use TypeSafeAI\OpenAICompat\Distribution;
 use TypeSafeAI\OpenAICompat\DTO\Completion;
 use TypeSafeAI\OpenAICompat\Text;
 use TypeSafeAI\Question\Choice;
 use TypeSafeAI\Question\Noul;
 use TypeSafeAI\Question\Question;
 use TypeSafeAI\Question\Score;
-use UnexpectedValueException;
 
 /**
  * Evaluates questions with a chat model through an OpenAI-compatible API, such as llama.cpp.
  *
- * The model writes a probability distribution over the options of each question, one request for each question.
-
+ * The model writes a probability distribution over the options of each question, all questions in one request.
  */
 class OpenAICompatClient implements SystemOneClient
 {
     use SystemOneEvaluator;
 
-    public const SYSTEM_PROMPT = "You are a calibration engine. You never answer in prose. You output only a JSON object with the key 'probabilities' mapping every given option to a probability, all options included, values in [0,1], summing to 1.";
+    public const SYSTEM_PROMPT = 'You are a calibration engine. You never answer in prose. You output only a JSON object that maps each question ID to a probability distribution over the options of the question: all options included, values in [0,1], summing to 1. The options of a score question are its level indices.';
 
     public const BASE_URI = 'https://api.openai.com/v1';
 
@@ -118,32 +121,32 @@ class OpenAICompatClient implements SystemOneClient
     }
 
     /**
-     * Answers each question about the state, one request for each question.
+     * Answers all questions about the state with a single chat request.
      *
      * @throws GuzzleException On an HTTP error
-     * @throws UnexpectedValueException When the model returns an invalid distribution
+     * @throws RuntimeException When the model writes content that is not JSON
      * @throws InvalidArgumentException When a question type is not supported
      */
     public function systemOne(SystemOneRequest $request): SystemOneResult
     {
+        $decisions = array_map($this->decision(...), $request->questions);
+        $completion = $this->complete($request, $decisions);
+
+        /** @var array<array-key, non-empty-array<array-key, float>> $distributions */
+        $distributions = $this->serializer->deserialize(
+            $completion->choices[0]->message->content,
+            'array<string, array<string, float>>',
+            'json',
+        );
+
         $result = new SystemOneResult();
-        $result->model = $request->model;
+        $result->model = $completion->model;
+        $result->usage->input_tokens = $completion->usage->prompt_tokens;
+        $result->usage->output_tokens = $completion->usage->completion_tokens;
         $result->answers = [];
-        $result->usage->input_tokens = 0;
-        $result->usage->output_tokens = 0;
 
-        $state = $this->text->of($request->state);
-
-        foreach ($request->questions as $id => $question) {
-            $decision = $this->decision($question);
-            $completion = $this->complete($request->model, $state, $decision);
-
-            $result->answers[$id] = $decision->answer(
-                Distribution::of($this->decode($completion->choices[0]->message->content), $decision->labels()),
-            );
-            $result->model = $completion->model;
-            $result->usage->input_tokens += $completion->usage->prompt_tokens;
-            $result->usage->output_tokens += $completion->usage->completion_tokens;
+        foreach ($decisions as $id => $decision) {
+            $result->answers[$id] = $decision->answer($distributions[$id]);
         }
 
         return $result;
@@ -159,36 +162,66 @@ class OpenAICompatClient implements SystemOneClient
         };
     }
 
-    private function complete(string $model, string $state, Decision $decision): Completion
+    /**
+     * @param array<array-key, Decision> $decisions
+     */
+    private function complete(SystemOneRequest $request, array $decisions): Completion
     {
         $response = $this->client->post(self::CHAT_COMPLETIONS, [
-            'json' => $this->body($model, "State:\n$state\n\n" . $decision->prompt(), $decision->labels()),
+            'json' => $this->body($request->model, $this->message($request->state, $decisions), self::schema($decisions)),
         ]);
 
         return $this->serializer->deserializeJson((string) $response->getBody(), Completion::class);
     }
 
     /**
-     * Decodes the content that the model writes, without changes to its values: Distribution validates them.
-     *
-     * @return array<mixed>
-     * @throws UnexpectedValueException When the content is not a JSON object or array
+     * @param array<array-key, Decision> $decisions
      */
-    private function decode(string $content): array
+    private function message(mixed $state, array $decisions): string
     {
-        try {
-            /** @var array<mixed> */
-            return $this->serializer->deserialize($content, 'array', 'json');
-        } catch (RuntimeException $e) {
-            throw new UnexpectedValueException(sprintf('Expected a JSON object, got %s', $content), previous: $e);
+        $sections = ["# State\n\n" . $this->text->of($state)];
+
+        foreach ($decisions as $id => $decision) {
+            $sections[] = "# Question $id\n\n" . $decision->prompt();
         }
+
+        return implode("\n\n", $sections);
     }
 
     /**
-     * @param list<string> $labels
+     * Returns the JSON schema of an object that maps each question ID to a probability for each label.
+     *
+     * @param array<array-key, Decision> $decisions
      * @return array<string, mixed>
      */
-    private function body(string $model, string $message, array $labels): array
+    private static function schema(array $decisions): array
+    {
+        return self::object(array_map(
+            static fn(Decision $decision) => self::object(array_fill_keys($decision->labels(), ['type' => 'number'])),
+            $decisions,
+        ));
+    }
+
+    /**
+     * @param array<array-key, mixed> $properties
+     * @return array<string, mixed>
+     */
+    private static function object(array $properties): array
+    {
+        return [
+            'type' => 'object',
+            // An object also for numeric keys, such as the level indices of a score
+            'properties' => (object) $properties,
+            'required' => array_map(strval(...), array_keys($properties)),
+            'additionalProperties' => false,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $schema
+     * @return array<string, mixed>
+     */
+    private function body(string $model, string $message, array $schema): array
     {
         return array_filter(array_merge([
             'model' => $model,
@@ -198,7 +231,7 @@ class OpenAICompatClient implements SystemOneClient
             ],
             'response_format' => [
                 'type' => 'json_schema',
-                'json_schema' => ['name' => 'distribution', 'schema' => Distribution::schema($labels), 'strict' => true],
+                'json_schema' => ['name' => 'distributions', 'schema' => $schema, 'strict' => true],
             ],
         ], $this->requestOptions), static fn($value) => null !== $value);
     }
