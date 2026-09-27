@@ -59,12 +59,16 @@ $client = match ((bool) getenv('OPENAI_BASE_URL')) {
 
 $state = 'Help! My payouts have been failing for 3 days.';
 
+$time = -microtime(true);
 $decision = $client->evaluate(
     $state,
     TicketDecision::class,
 );
+$time += microtime(true);
 
+printf("Client:      %s\n", get_class($client));
 printf("State:       %s\n", $state);
 printf("Urgent:      %.2f\n", $decision->is_urgent->noul);
 printf("Route to:    %s (confidence %.2f)\n", $decision->department->choice, $decision->department->confidence);
 printf("Frustration: %.2f\n", $decision->frustration->score);
+printf("Speed:       %.2f\n", $time);
