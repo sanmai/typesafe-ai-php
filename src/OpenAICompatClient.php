@@ -48,6 +48,7 @@ use TypeSafeAI\OpenAICompat\Decision\Decision;
 use TypeSafeAI\OpenAICompat\Decision\NoulDecision;
 use TypeSafeAI\OpenAICompat\Decision\ScoreDecision;
 use TypeSafeAI\OpenAICompat\DTO\Completion;
+use TypeSafeAI\OpenAICompat\DTO\Distributions;
 use TypeSafeAI\OpenAICompat\ValueFormatter;
 use TypeSafeAI\Question\Choice;
 use TypeSafeAI\Question\Noul;
@@ -132,12 +133,7 @@ class OpenAICompatClient implements SystemOneClient
         $decisions = array_map($this->decision(...), $request->questions);
         $completion = $this->complete($request, $decisions);
 
-        /** @var array<array-key, non-empty-array<array-key, float>> $distributions */
-        $distributions = $this->serializer->deserialize(
-            $completion->choices[0]->message->content,
-            'array<string, array<string, float>>',
-            'json',
-        );
+        $distributions = $this->serializer->deserializeJson($completion->choices[0]->message->content, Distributions::class);
 
         $result = new SystemOneResult();
         $result->model = $completion->model;
@@ -146,7 +142,7 @@ class OpenAICompatClient implements SystemOneClient
         $result->answers = [];
 
         foreach ($decisions as $id => $decision) {
-            $result->answers[$id] = $decision->answer($distributions[$id]);
+            $result->answers[$id] = $decision->answer($distributions->distributions[$id]);
         }
 
         return $result;
