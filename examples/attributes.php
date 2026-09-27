@@ -52,7 +52,7 @@ class TicketDecision
     ) {}
 }
 
-$client = match((bool) getenv('OPENAI_BASE_URL')) {
+$client = match ((bool) getenv('OPENAI_BASE_URL')) {
     true => OpenAICompatClient::createInstance(),
     default => TypeSafeClient::createInstance(),
 };

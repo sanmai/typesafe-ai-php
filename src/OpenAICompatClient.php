@@ -50,9 +50,6 @@ use function getenv;
 use function rtrim;
 use function sprintf;
 
-use const JSON_UNESCAPED_SLASHES;
-use const JSON_UNESCAPED_UNICODE;
-
 /**
  * Evaluates questions with a chat model through an OpenAI-compatible API, such as llama.cpp.
  *
@@ -102,7 +99,7 @@ class OpenAICompatClient implements SystemOneClient
 
         return new self(
             $httpClient,
-            Serializer::withJSONOptions(JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            Serializer::withJSONOptions(),
             $requestOptions,
         );
     }
