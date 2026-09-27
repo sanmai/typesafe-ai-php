@@ -28,13 +28,11 @@ use GuzzleHttp\MessageFormatter;
 use GuzzleHttp\Middleware;
 use GuzzleRetry\GuzzleRetryMiddleware;
 use JMS\Serializer\Exception\LogicException;
-use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
 use InvalidArgumentException;
 use JSONSerializer\Contracts\JsonDeserializer;
 use JSONSerializer\Serializer;
 use Psr\Log\LoggerInterface;
-use ReflectionClass;
 
 use function array_merge;
 use function getenv;
@@ -43,11 +41,11 @@ use function sprintf;
 
 /**
  * TypeSafe AI API Client.
- *
- * @phpstan-import-type ValueType from SystemOneRequest
  */
-class TypeSafeClient
+class TypeSafeClient implements SystemOneClient
 {
+    use EvaluatesAttributes;
+
     public const BASE_URI = 'https://api.typesafe.ai';
 
     public const API_KEY_ENV = 'TYPESAFE_API_KEY';
@@ -152,7 +150,7 @@ class TypeSafeClient
     public function systemOne(SystemOneRequest $request): SystemOneResult
     {
         $response = $this->client->post(self::SYSTEM_ONE, [
-            'body' => $this->serializer->serialize($request, 'json', self::serializationContext()),
+            'body' => $this->serializer->serialize($request, 'json', RequestContext::create()),
             'headers' => ['Content-Type' => 'application/json'],
         ]);
 
@@ -160,22 +158,6 @@ class TypeSafeClient
             (string) $response->getBody(),
             SystemOneResult::class,
         );
-    }
-
-    /**
-     * Evaluates the questions declared by a class and returns an instance with the answers.
-     *
-     * @template TResult of object
-     * @param ValueType $state
-     * @param class-string<TResult> $class
-     * @return TResult
-     */
-    public function evaluate(string|array|object $state, string $class, string $model = SystemOneRequest::MODEL_LATEST): object
-    {
-        $reader = new AttributeReader(new ReflectionClass($class));
-        $request = new SystemOneRequest($state, $model, [...$reader->questions()]);
-
-        return $reader->hydrate($this->systemOne($request));
     }
 
     /**
@@ -193,11 +175,4 @@ class TypeSafeClient
         );
     }
 
-    /**
-     * Sends null values, such as a choice option without a description.
-     */
-    private static function serializationContext(): SerializationContext
-    {
-        return SerializationContext::create()->setSerializeNull(true);
-    }
 }

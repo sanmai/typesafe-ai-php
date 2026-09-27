@@ -188,6 +188,38 @@ foreach ($client->models()->models as $model) {
 
 Questions are plain data objects. The client serializes their properties to JSON, null values included.
 
+### Local Models
+
+`OpenAICompatClient` evaluates the same requests with a chat model through an OpenAI-compatible API, such as [llama.cpp](https://github.com/ggml-org/llama.cpp) or vLLM. The model writes a probability distribution over the options of each question, and the client converts it to the same answer types as the TypeSafe API.
+
+```php
+use TypeSafeAI\OpenAICompatClient;
+
+$client = OpenAICompatClient::createInstance('http://127.0.0.1:8080/v1');
+
+$decision = $client->evaluate($ticket, TicketDecision::class);
+$response = $client->systemOne($request);
+```
+
+Both clients implement `TypeSafeAI\SystemOneClient`: type-hint against it to change the backend without other changes.
+
+There are differences from the TypeSafe API:
+
+- The client sends one request for each question, without retries. The timeout is 120 seconds.
+- The model writes the probabilities as text. A distribution is valid if its probabilities sum to 1 within 0.02; the client renormalizes a sum that deviates by more than 0.001. An invalid distribution throws `UnexpectedValueException`.
+- The model receives only its label set: the option names, `no` and `yes`, or the level indices. A tie selects the lexicographically smallest label.
+- The request model is sent unchanged. llama.cpp ignores it; for other servers, specify it as for the TypeSafe API.
+
+`createInstance()` takes an optional API key, then `$requestOptions` to change the request body. A null value removes a field. For example, to disable thinking for a reasoning model with llama.cpp:
+
+```php
+$client = OpenAICompatClient::createInstance('http://127.0.0.1:8080/v1', requestOptions: [
+    'chat_template_kwargs' => ['enable_thinking' => false],
+]);
+```
+
+The prompts and the validation follow the `openai_compat` route of [JevBench](https://github.com/fstandhartinger/jevbench).
+
 ## Examples
 
 Check out the [examples](examples/) directory. Examples use the API key from the `TYPESAFE_API_KEY` environment variable:
@@ -201,6 +233,7 @@ TYPESAFE_API_KEY=your-api-key php examples/urgency.php
 - [frustration.php](examples/frustration.php): a score along ordered levels.
 - [chat-log.php](examples/chat-log.php): questions of all three types about a chat log, in one request.
 - [attributes.php](examples/attributes.php): a result declaring its own questions using attributes.
+- [llama-cpp.php](examples/llama-cpp.php): the questions from `attributes.php`, evaluated by a local model with llama.cpp.
 - [errors.php](examples/errors.php): an invalid request, and the validation error as returned by the API.
 
 ## Errors and Retries

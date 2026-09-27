@@ -11,7 +11,8 @@ It is designed to be type-safe and easy to use: requests are built with a fluent
     - **Request:** `SystemOneRequest` retains the state and a map of `Question` DTOs (`Noul`, `Choice`, `Score`). The client serializes it with JMS.
     - **Response/DTOs:** `SystemOneResult` retains a map of `Answer` DTOs. JMS selects the subclass using the `type` field.
     - **Models:** `TypeSafeClient::models()` returns a `ModelsResponse` of `DTO\ModelCard`.
-    - **Attributes:** `Noul`, `Choice`, and `Score` are PHP attributes too, so a result class can declare its own questions. `TypeSafeClient::evaluate()` is the only entry point. It builds a single `AttributeReader` for the class, sends the questions that the reader parses from the constructor, and then hydrates the class with `hydrate()`. The request and the result know nothing about attributes: keep the attribute logic in the reader and its one caller.
+    - **Attributes:** `Noul`, `Choice`, and `Score` are PHP attributes too, so a result class can declare its own questions. `evaluate()` in the `EvaluatesAttributes` trait is the only entry point. It builds a single `AttributeReader` for the class, sends the questions that the reader parses from the constructor, and then hydrates the class with `hydrate()`. The request and the result know nothing about attributes: keep the attribute logic in the reader and its one caller.
+    - **Local models:** `OpenAICompatClient` implements the same `SystemOneClient` interface with an OpenAI-compatible chat API, such as llama.cpp. It serializes the request as `TypeSafeClient` does, sends one chat request for each question, and builds the answers in the JSON format of the TypeSafe API, so the same DTOs deserialize them. The classes in `src/OpenAICompat/` build the prompt for each question type (`Decision`) and validate the distribution that the model writes (`Distribution`). The prompts and the validation follow the `openai_compat` route of JevBench; do not change them without a reason, because the benchmark results depend on them.
 
 End-user documentation:
 
@@ -20,7 +21,7 @@ End-user documentation:
 ## Project Navigation
 
 **Key locations:**
-- **Core Logic:** @src/TypeSafeClient.php (the main entry point for all API calls).
+- **Core Logic:** @src/TypeSafeClient.php (the main entry point for all API calls), and `src/OpenAICompatClient.php` with `src/OpenAICompat/` for local models.
 - **Request:** `src/SystemOneRequest.php` and `src/Question/`.
 - **Data Models:** `src/SystemOneResult.php`, `src/ModelsResponse.php`, and `src/DTO/` (all response objects).
 - **Tests:** `tests/`, with response fixtures in `tests/data/`.
@@ -45,7 +46,7 @@ End-user documentation:
 - **Answer types**: `DTO\Answer` has a JMS `#[Discriminator]` on the `type` field. To add an answer type, add a subclass, a map entry, and an accessor on `SystemOneResult`.
 - **JMS attributes**: Use PHP attributes such as `#[Type(...)]` for JMS serializer metadata. Keep PHPDoc like `@var` where it provides static-analysis detail.
 - **Serializer property names**: The JSON serializer uses JMS' `IdenticalPropertyNamingStrategy`, so DTO property names must match API field names unless a `#[SerializedName(...)]` override is added.
-- **Retries**: `408`, `429`, and every `5xx` response, plus connection timeouts, are retried twice by `GuzzleRetryMiddleware`. Other HTTP errors throw Guzzle exceptions.
+- **Retries**: `408`, `429`, and every `5xx` response, plus connection timeouts, are retried twice by `GuzzleRetryMiddleware`. Other HTTP errors throw Guzzle exceptions. `OpenAICompatClient` does not retry.
 - **Environment**: `createInstance()` defaults to `TYPESAFE_API_KEY` and `TYPESAFE_BASE_URL`, the names the other SDKs use. There is no default-model variable: the model is a property of the request.
 
 ## Development Workflow
