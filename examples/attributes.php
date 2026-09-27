@@ -22,10 +22,12 @@ declare(strict_types=1);
 // A result class that declares its own questions, populated with a typed result for each one.
 //
 // Run: TYPESAFE_API_KEY=your-api-key php examples/attributes.php
+// Or: OPENAI_BASE_URL=http://127.0.0.1:8080/v1 php examples/attributes.php
 
 use TypeSafeAI\DTO\ChoiceAnswer;
 use TypeSafeAI\DTO\NoulAnswer;
 use TypeSafeAI\DTO\ScoreAnswer;
+use TypeSafeAI\OpenAICompatClient;
 use TypeSafeAI\Question\Choice;
 use TypeSafeAI\Question\Noul;
 use TypeSafeAI\Question\NoulCriteria;
@@ -50,13 +52,22 @@ class TicketDecision
     ) {}
 }
 
-$client = TypeSafeClient::createInstance();
+$client = match ((bool) getenv('OPENAI_BASE_URL')) {
+    default => TypeSafeClient::createInstance(),
+};
 
+$state = 'Help! My payouts have been failing for 3 days.';
+
+$time = -microtime(true);
 $decision = $client->evaluate(
-    'Help! My payouts have been failing for 3 days.',
+    $state,
     TicketDecision::class,
 );
+$time += microtime(true);
 
+printf("Client:      %s\n", get_class($client));
+printf("State:       %s\n", $state);
 printf("Urgent:      %.2f\n", $decision->is_urgent->noul);
 printf("Route to:    %s (confidence %.2f)\n", $decision->department->choice, $decision->department->confidence);
 printf("Frustration: %.2f\n", $decision->frustration->score);
+printf("Speed:       %.2f\n", $time);
