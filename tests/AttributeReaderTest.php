@@ -21,31 +21,35 @@ declare(strict_types=1);
 
 namespace Tests\TypeSafeAI;
 
+use function array_keys;
+
 use InvalidArgumentException;
+
+use function iterator_count;
+use function iterator_to_array;
+
 use PHPUnit\Framework\MockObject\MockObject;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionParameter;
+
+use function sprintf;
+
 use Tests\TypeSafeAI\Doubles\DoubleQuestionAttribute;
 use Tests\TypeSafeAI\Doubles\MissingQuestionAttribute;
 use Tests\TypeSafeAI\Doubles\NoQuestions;
 use Tests\TypeSafeAI\Doubles\TicketDecision;
 use Tests\TypeSafeAI\Doubles\UntypedAnswer;
 use Tests\TypeSafeAI\Doubles\WrongAnswerType;
+use TypeSafeAI\AttributeReader;
 use TypeSafeAI\DTO\Answer;
 use TypeSafeAI\DTO\NoulAnswer;
 use TypeSafeAI\Question\Choice;
 use TypeSafeAI\Question\Noul;
 use TypeSafeAI\Question\Score;
-use TypeSafeAI\AttributeReader;
 use TypeSafeAI\SystemOneResult;
-
-use function array_keys;
-use function iterator_count;
-use function iterator_to_array;
-use function sprintf;
 
 /**
  * @covers \TypeSafeAI\AttributeReader

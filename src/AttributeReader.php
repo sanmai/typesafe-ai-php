@@ -21,17 +21,21 @@ declare(strict_types=1);
 
 namespace TypeSafeAI;
 
+use function count;
+
 use InvalidArgumentException;
+
+use function is_subclass_of;
+
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
+
+use function sprintf;
+
 use TypeSafeAI\DTO\Answer;
 use TypeSafeAI\Question\Question;
-
-use function count;
-use function is_subclass_of;
-use function sprintf;
 
 /**
  * Parses the questions and answer types from the annotated constructor.

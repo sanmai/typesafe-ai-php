@@ -19,8 +19,8 @@
 
 namespace Tests\TypeSafeAI\Doubles;
 
-use JsonSerializable;
 use BadMethodCallException;
+use JsonSerializable;
 
 /**
  * Used to validate that JsonSerializable is unused.
