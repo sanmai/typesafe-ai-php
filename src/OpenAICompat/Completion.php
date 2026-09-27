@@ -19,39 +19,22 @@
 
 declare(strict_types=1);
 
-namespace TypeSafeAI\DTO;
+namespace TypeSafeAI\OpenAICompat;
 
-use JMS\Serializer\Annotation\Exclude;
 use JMS\Serializer\Annotation\Type;
 
-class ScoreAnswer extends Answer
+/**
+ * This DTO defines the fields of a chat completion response that the client uses.
+ */
+class Completion
 {
-    #[Exclude]
-    public string $type = 'score';
+    public string $model;
 
     /**
-     * The probability-weighted level; can appear between levels.
+     * @var list<CompletionChoice>
      */
-    public float $score;
+    #[Type('array<TypeSafeAI\OpenAICompat\CompletionChoice>')]
+    public array $choices;
 
-    /**
-     * Each level index mapped to its description, as they were sent.
-     *
-     * @var array<int, string|array<mixed>|object>
-     */
-    #[Type('array')]
-    public array $legend;
-
-    /**
-     * Each level index mapped to its probability.
-     *
-     * @var array<int, float>
-     */
-    #[Type('array<int, float>')]
-    public array $probabilities;
-
-    /**
-     * How certain the model is, from 0 to 1.
-     */
-    public float $confidence;
+    public CompletionUsage $usage;
 }

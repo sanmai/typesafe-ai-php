@@ -21,12 +21,10 @@ declare(strict_types=1);
 
 namespace TypeSafeAI\OpenAICompat;
 
-use function is_string;
-use function json_encode;
+use JMS\Serializer\SerializerInterface;
+use TypeSafeAI\RequestContext;
 
-use const JSON_THROW_ON_ERROR;
-use const JSON_UNESCAPED_SLASHES;
-use const JSON_UNESCAPED_UNICODE;
+use function is_string;
 
 /**
  * Converts values to prompt text.
@@ -35,16 +33,17 @@ use const JSON_UNESCAPED_UNICODE;
  */
 class Text
 {
+    public function __construct(private readonly SerializerInterface $serializer) {}
+
     /**
-     * Returns text unchanged, null as an empty string, and structured data as JSON.
+     * Returns text unchanged, null as an empty string, and structured data as JSON, serialized as TypeSafeClient sends it.
      */
-    public static function of(mixed $value): string
+    public function of(mixed $value): string
     {
         return match (true) {
             is_string($value) => $value,
             null === $value => '',
-            default => json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
+            default => $this->serializer->serialize($value, 'json', RequestContext::create()),
         };
     }
-
 }

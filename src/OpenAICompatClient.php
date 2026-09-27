@@ -24,35 +24,40 @@ namespace TypeSafeAI;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use InvalidArgumentException;
+use JMS\Serializer\Exception\RuntimeException;
 use JMS\Serializer\SerializerInterface;
 use JSONSerializer\Contracts\JsonDeserializer;
 use JSONSerializer\Serializer;
+use TypeSafeAI\DTO\Usage;
 use TypeSafeAI\OpenAICompat\ChoiceDecision;
+use TypeSafeAI\OpenAICompat\Completion;
 use TypeSafeAI\OpenAICompat\Decision;
 use TypeSafeAI\OpenAICompat\Distribution;
 use TypeSafeAI\OpenAICompat\NoulDecision;
 use TypeSafeAI\OpenAICompat\ScoreDecision;
 use TypeSafeAI\OpenAICompat\Text;
+use TypeSafeAI\Question\Choice;
+use TypeSafeAI\Question\Noul;
+use TypeSafeAI\Question\Question;
+use TypeSafeAI\Question\Score;
 use UnexpectedValueException;
 
 use function array_fill_keys;
 use function array_filter;
 use function array_merge;
+use function get_debug_type;
 use function getenv;
-use function json_decode;
-use function json_encode;
 use function rtrim;
 use function sprintf;
 
-use const JSON_THROW_ON_ERROR;
+use const JSON_UNESCAPED_SLASHES;
+use const JSON_UNESCAPED_UNICODE;
 
 /**
  * Evaluates questions with a chat model through an OpenAI-compatible API, such as llama.cpp.
  *
  * The model writes a probability distribution over the options of each question, one request for each question.
- *
- * @phpstan-type Completion array{model: string, choices: list<array{message: array{content: string}}>, usage: array{prompt_tokens: int, completion_tokens: int}}
- * @phpstan-type WireQuestion array{type: string, instructions?: mixed, criteria?: array<mixed>}
+
  */
 class OpenAICompatClient implements SystemOneClient
 {
@@ -95,8 +100,14 @@ class OpenAICompatClient implements SystemOneClient
             'headers' => null === $apiKey ? [] : ['Authorization' => "Bearer $apiKey"],
         ], $clientOptions));
 
-        return new self($httpClient, Serializer::withJSONOptions(), $requestOptions);
+        return new self(
+            $httpClient,
+            Serializer::withJSONOptions(JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            $requestOptions,
+        );
     }
+
+    private readonly Text $text;
 
     /**
      * @param array<string, mixed> $requestOptions
@@ -105,7 +116,9 @@ class OpenAICompatClient implements SystemOneClient
         private readonly Client $client,
         private readonly SerializerInterface&JsonDeserializer $serializer,
         private readonly array $requestOptions = [],
-    ) {}
+    ) {
+        $this->text = new Text($serializer);
+    }
 
     /**
      * Answers each question about the state, one request for each question.
@@ -116,64 +129,63 @@ class OpenAICompatClient implements SystemOneClient
      */
     public function systemOne(SystemOneRequest $request): SystemOneResult
     {
-        /** @var array{state: mixed, questions: array<array-key, WireQuestion>} $wire */
-        $wire = json_decode(
-            $this->serializer->serialize($request, 'json', RequestContext::create()),
-            true,
-            flags: JSON_THROW_ON_ERROR,
-        );
+        $result = new SystemOneResult();
+        $result->model = $request->model;
+        $result->answers = [];
+        $result->usage = new Usage();
+        $result->usage->input_tokens = 0;
+        $result->usage->output_tokens = 0;
 
-        $result = [
-            'model' => $request->model,
-            'answers' => [],
-            'usage' => ['input_tokens' => 0, 'output_tokens' => 0],
-        ];
+        $state = $this->text->of($request->state);
 
-        foreach ($wire['questions'] as $id => $question) {
-            $decision = self::decision($question);
-            $completion = $this->complete($request->model, Text::of($wire['state']), $decision);
+        foreach ($request->questions as $id => $question) {
+            $decision = $this->decision($question);
+            $completion = $this->complete($request->model, $state, $decision);
 
-            $result['answers'][$id] = $decision->answer(
-                Distribution::parse($completion['choices'][0]['message']['content'], $decision->labels()),
+            $result->answers[$id] = $decision->answer(
+                Distribution::of($this->decode($completion->choices[0]->message->content), $decision->labels()),
             );
-            $result['model'] = $completion['model'];
-            $result['usage']['input_tokens'] += $completion['usage']['prompt_tokens'];
-            $result['usage']['output_tokens'] += $completion['usage']['completion_tokens'];
+            $result->model = $completion->model;
+            $result->usage->input_tokens += $completion->usage->prompt_tokens;
+            $result->usage->output_tokens += $completion->usage->completion_tokens;
         }
 
-        return $this->serializer->deserializeJson(
-            json_encode($result, JSON_THROW_ON_ERROR),
-            SystemOneResult::class,
-        );
+        return $result;
     }
 
-    /**
-     * @param WireQuestion $question
-     */
-    private static function decision(array $question): Decision
+    private function decision(Question $question): Decision
     {
-        $instructions = $question['instructions'] ?? null;
-        $criteria = $question['criteria'] ?? [];
-
-        return match ($question['type']) {
-            'noul' => new NoulDecision($instructions, $criteria),
-            'choice' => new ChoiceDecision($instructions, $criteria),
-            'score' => new ScoreDecision($instructions, $criteria),
-            default => throw new InvalidArgumentException(sprintf('Question type "%s" is not supported', $question['type'])),
+        return match (true) {
+            $question instanceof Noul => new NoulDecision($question, $this->text),
+            $question instanceof Choice => new ChoiceDecision($question, $this->text),
+            $question instanceof Score => new ScoreDecision($question, $this->text),
+            default => throw new InvalidArgumentException(sprintf('Question type %s is not supported', get_debug_type($question))),
         };
     }
 
-    /**
-     * @return Completion
-     */
-    private function complete(string $model, string $state, Decision $decision): array
+    private function complete(string $model, string $state, Decision $decision): Completion
     {
         $response = $this->client->post(self::CHAT_COMPLETIONS, [
             'json' => $this->body($model, "State:\n$state\n\n" . $decision->prompt(), $decision->labels()),
         ]);
 
-        /** @var Completion */
-        return json_decode((string) $response->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        return $this->serializer->deserializeJson((string) $response->getBody(), Completion::class);
+    }
+
+    /**
+     * Decodes the content that the model writes, without changes to its values: Distribution validates them.
+     *
+     * @return array<mixed>
+     * @throws UnexpectedValueException When the content is not a JSON object or array
+     */
+    private function decode(string $content): array
+    {
+        try {
+            /** @var array<mixed> */
+            return $this->serializer->deserialize($content, 'array', 'json');
+        } catch (RuntimeException $e) {
+            throw new UnexpectedValueException(sprintf('Expected a JSON object, got %s', $content), previous: $e);
+        }
     }
 
     /**

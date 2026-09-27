@@ -21,22 +21,32 @@ declare(strict_types=1);
 
 namespace TypeSafeAI\OpenAICompat;
 
+use TypeSafeAI\DTO\ScoreAnswer;
+use TypeSafeAI\Question\Score;
+use TypeSafeAI\SystemOneRequest;
+
 use function array_keys;
 use function array_map;
+use function array_values;
 use function implode;
 
 /**
+ * @phpstan-import-type ValueType from SystemOneRequest
  * @final
  */
 class ScoreDecision implements Decision
 {
     /**
-     * @param array<mixed> $levels Level descriptions, from the lowest to the highest.
+     * @var list<ValueType> Level descriptions, from the lowest to the highest.
      */
+    private readonly array $levels;
+
     public function __construct(
-        private readonly mixed $instructions,
-        private readonly array $levels,
-    ) {}
+        private readonly Score $question,
+        private readonly Text $text,
+    ) {
+        $this->levels = array_values($question->criteria);
+    }
 
     public function labels(): array
     {
@@ -48,28 +58,30 @@ class ScoreDecision implements Decision
         $lines = [];
 
         foreach ($this->levels as $level => $description) {
-            $lines[] = "$level: " . Text::of($description);
+            $lines[] = "$level: " . $this->text->of($description);
         }
 
-        return Text::of($this->instructions)
+        return $this->text->of($this->question->instructions)
             . "\n\nLevels:\n" . implode("\n", $lines)
             . "\n\nRate the state. Output probabilities over the level indices: " . Labels::json($this->labels()) . '.';
     }
 
-    public function answer(Distribution $distribution): array
+    public function answer(Distribution $distribution): ScoreAnswer
     {
         $score = 0.0;
+        $probabilities = [];
 
-        foreach ($distribution->probabilities as $level => $probability) {
-            $score += (int) $level * $probability;
+        foreach (array_keys($this->levels) as $level) {
+            $probabilities[$level] = $distribution->probabilities[$level];
+            $score += $level * $probabilities[$level];
         }
 
-        return [
-            'type' => 'score',
-            'score' => $score,
-            'legend' => $this->levels,
-            'probabilities' => $distribution->probabilities,
-            'confidence' => $distribution->confidence(),
-        ];
+        $answer = new ScoreAnswer();
+        $answer->score = $score;
+        $answer->legend = $this->levels;
+        $answer->probabilities = $probabilities;
+        $answer->confidence = $distribution->confidence();
+
+        return $answer;
     }
 }

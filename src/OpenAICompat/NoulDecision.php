@@ -21,6 +21,10 @@ declare(strict_types=1);
 
 namespace TypeSafeAI\OpenAICompat;
 
+use TypeSafeAI\DTO\NoulAnswer;
+use TypeSafeAI\Question\Choice;
+use TypeSafeAI\Question\Noul;
+
 /**
  * Presents a yes/no question as a choice between "no" and "yes".
  *
@@ -30,15 +34,12 @@ class NoulDecision implements Decision
 {
     private readonly ChoiceDecision $choice;
 
-    /**
-     * @param array{true?: mixed, false?: mixed} $criteria
-     */
-    public function __construct(mixed $instructions, array $criteria)
+    public function __construct(Noul $question, Text $text)
     {
-        $this->choice = new ChoiceDecision($instructions, [
-            'no' => $criteria['false'] ?? null,
-            'yes' => $criteria['true'] ?? null,
-        ]);
+        $this->choice = new ChoiceDecision(new Choice($question->instructions, [
+            'no' => $question->criteria->false,
+            'yes' => $question->criteria->true,
+        ]), $text);
     }
 
     public function labels(): array
@@ -51,11 +52,11 @@ class NoulDecision implements Decision
         return $this->choice->prompt();
     }
 
-    public function answer(Distribution $distribution): array
+    public function answer(Distribution $distribution): NoulAnswer
     {
-        return [
-            'type' => 'noul',
-            'noul' => $distribution->probabilities['yes'],
-        ];
+        $answer = new NoulAnswer();
+        $answer->noul = $distribution->probabilities['yes'];
+
+        return $answer;
     }
 }

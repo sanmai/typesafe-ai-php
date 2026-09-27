@@ -21,6 +21,9 @@ declare(strict_types=1);
 
 namespace TypeSafeAI\OpenAICompat;
 
+use TypeSafeAI\DTO\ChoiceAnswer;
+use TypeSafeAI\Question\Choice;
+
 use function array_keys;
 use function array_map;
 use function implode;
@@ -30,40 +33,37 @@ use function implode;
  */
 class ChoiceDecision implements Decision
 {
-    /**
-     * @param array<array-key, mixed> $criteria Options mapped to their descriptions.
-     */
     public function __construct(
-        private readonly mixed $instructions,
-        private readonly array $criteria,
+        private readonly Choice $question,
+        private readonly Text $text,
     ) {}
 
     public function labels(): array
     {
-        return array_map(strval(...), array_keys($this->criteria));
+        return array_map(strval(...), array_keys($this->question->criteria));
     }
 
     public function prompt(): string
     {
         $lines = [];
 
-        foreach ($this->criteria as $label => $description) {
-            $text = Text::of($description);
+        foreach ($this->question->criteria as $label => $description) {
+            $text = $this->text->of($description);
             $lines[] = '' === $text ? "- $label" : "- $label: $text";
         }
 
-        return Text::of($this->instructions)
+        return $this->text->of($this->question->instructions)
             . "\n\nOptions:\n" . implode("\n", $lines)
             . "\n\nOutput probabilities over exactly these keys: " . Labels::json($this->labels()) . '.';
     }
 
-    public function answer(Distribution $distribution): array
+    public function answer(Distribution $distribution): ChoiceAnswer
     {
-        return [
-            'type' => 'choice',
-            'choice' => $distribution->argmax(),
-            'probabilities' => $distribution->probabilities,
-            'confidence' => $distribution->confidence(),
-        ];
+        $answer = new ChoiceAnswer();
+        $answer->choice = $distribution->argmax();
+        $answer->probabilities = $distribution->probabilities;
+        $answer->confidence = $distribution->confidence();
+
+        return $answer;
     }
 }

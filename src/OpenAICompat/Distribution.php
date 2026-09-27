@@ -31,12 +31,10 @@ use function count;
 use function is_array;
 use function is_float;
 use function is_int;
-use function json_decode;
 use function ksort;
 use function max;
 use function sprintf;
 
-use const JSON_THROW_ON_ERROR;
 use const SORT_STRING;
 
 /**
@@ -56,19 +54,18 @@ class Distribution
     private function __construct(public readonly array $probabilities) {}
 
     /**
-     * Parses {"probabilities": {...}} and validates it against the labels.
+     * Validates a decoded {"probabilities": {...}} object against the labels.
      *
      * A total within 0.001 of 1 is used unchanged, a total within 0.02 is renormalized, anything else is rejected.
      *
+     * @param array<mixed> $object
      * @param list<string> $labels
      * @throws UnexpectedValueException When the distribution is invalid
      */
-    public static function parse(string $content, array $labels): self
+    public static function of(array $object, array $labels): self
     {
-        $object = json_decode($content, true, flags: JSON_THROW_ON_ERROR);
-
-        if (!is_array($object) || ['probabilities'] !== array_keys($object) || !is_array($object['probabilities'])) {
-            throw new UnexpectedValueException(sprintf('Expected an object with only "probabilities", got %s', $content));
+        if (['probabilities'] !== array_keys($object) || !is_array($object['probabilities'])) {
+            throw new UnexpectedValueException('Expected an object with only "probabilities"');
         }
 
         return self::validate($object['probabilities'], $labels);

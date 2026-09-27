@@ -21,27 +21,7 @@ declare(strict_types=1);
 
 namespace TypeSafeAI\OpenAICompat;
 
-use TypeSafeAI\DTO\Answer;
-
-/**
- * Presents a question to a chat model as a distribution over a label set.
- */
-interface Decision
+class CompletionMessage
 {
-    /**
-     * @return list<string>
-     */
-    public function labels(): array;
-
-    /**
-     * Returns the question part of the user message.
-     */
-    public function prompt(): string;
-
-    /**
-     * Converts the distribution to an answer, in the JSON format of the TypeSafe API.
-     *
-     * @return array<string, mixed>
-     */
-    public function answer(Distribution $distribution): Answer;
+    public string $content;
 }

@@ -29,6 +29,7 @@ use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
 use Tests\TypeSafeAI\Doubles\RankQuestion;
+use Tests\TypeSafeAI\Doubles\ExampleState;
 use Tests\TypeSafeAI\Doubles\TicketDecision;
 use TypeSafeAI\OpenAICompatClient;
 use TypeSafeAI\SystemOneRequest;
@@ -277,12 +278,48 @@ class OpenAICompatClientTest extends TestCase
         $client->systemOne(SystemOneRequest::build('Plain text')->noul('is_urgent', 'Urgent?'));
     }
 
+    public static function provideUndecodableContent(): iterable
+    {
+        yield 'prose' => ['The answer is yes.'];
+        yield 'scalar' => ['0.9'];
+    }
+
+    /**
+     * @dataProvider provideUndecodableContent
+     */
+    public function testUndecodableContent(string $content): void
+    {
+        $client = $this->client([new Response(200, [], json_encode([
+            'model' => 'LocalLLM',
+            'choices' => [['message' => ['content' => $content]]],
+            'usage' => ['prompt_tokens' => 1, 'completion_tokens' => 1],
+        ]))]);
+
+        $this->expectException(UnexpectedValueException::class);
+        $this->expectExceptionMessage("Expected a JSON object, got $content");
+
+        $client->systemOne(SystemOneRequest::build('Plain text')->noul('is_urgent', 'Urgent?'));
+    }
+
+    public function testObjectState(): void
+    {
+        $client = $this->client([self::completion(['no' => 0.5, 'yes' => 0.5])]);
+
+        $client->systemOne(SystemOneRequest::build(new ExampleState())->noul('is_urgent', 'Urgent?'));
+
+        // Private properties and nulls, as TypeSafeClient sends them
+        $this->assertStringStartsWith(
+            "State:\n{\"id\":42,\"assignee\":null,\"secret\":\"private properties are sent too\"}\n\n",
+            $this->requestBody(0)['messages'][1]['content'],
+        );
+    }
+
     public function testUnsupportedQuestion(): void
     {
         $client = $this->client([]);
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Question type "rank" is not supported');
+        $this->expectExceptionMessage('Question type Tests\\TypeSafeAI\\Doubles\\RankQuestion is not supported');
 
         $client->systemOne(SystemOneRequest::build('Plain text')->ask('order', new RankQuestion()));
     }

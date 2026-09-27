@@ -21,7 +21,6 @@ declare(strict_types=1);
 
 namespace Tests\TypeSafeAI\OpenAICompat;
 
-use JsonException;
 use PHPUnit\Framework\TestCase;
 use TypeSafeAI\OpenAICompat\Distribution;
 use UnexpectedValueException;
@@ -53,13 +52,12 @@ class DistributionTest extends TestCase
      */
     public function testValid(string $content, array $expected): void
     {
-        $this->assertSame($expected, Distribution::parse($content, ['no', 'yes'])->probabilities);
+        $this->assertSame($expected, Distribution::of(json_decode($content, true), ['no', 'yes'])->probabilities);
     }
 
     public static function provideInvalid(): iterable
     {
-        yield 'not an object' => ['[0.1, 0.9]', 'Expected an object with only "probabilities", got [0.1, 0.9]'];
-        yield 'scalar' => ['0.9', 'Expected an object with only "probabilities"'];
+        yield 'not an object' => ['[0.1, 0.9]', 'Expected an object with only "probabilities"'];
         yield 'extra top-level key' => ['{"probabilities": {"no": 0.1, "yes": 0.9}, "reason": "x"}', 'Expected an object with only "probabilities"'];
         yield 'wrong top-level key' => ['{"distribution": {"no": 0.1, "yes": 0.9}}', 'Expected an object with only "probabilities"'];
         yield 'probabilities not an object' => ['{"probabilities": 0.9}', 'Expected an object with only "probabilities"'];
@@ -82,7 +80,7 @@ class DistributionTest extends TestCase
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage($message);
 
-        Distribution::parse($content, ['no', 'yes']);
+        Distribution::of(json_decode($content, true), ['no', 'yes']);
     }
 
     public function testNoLabels(): void
@@ -90,14 +88,7 @@ class DistributionTest extends TestCase
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage('Expected at least one option');
 
-        Distribution::parse('{"probabilities": {}}', []);
-    }
-
-    public function testNotJson(): void
-    {
-        $this->expectException(JsonException::class);
-
-        Distribution::parse('The answer is yes.', ['no', 'yes']);
+        Distribution::of(['probabilities' => []], []);
     }
 
     public static function provideArgmax(): iterable
@@ -113,7 +104,8 @@ class DistributionTest extends TestCase
      */
     public function testArgmax(string $content, string $label, float $confidence): void
     {
-        $distribution = Distribution::parse($content, array_map(strval(...), array_keys(json_decode($content, true)['probabilities'])));
+        $object = json_decode($content, true);
+        $distribution = Distribution::of($object, array_map(strval(...), array_keys($object['probabilities'])));
 
         $this->assertSame($label, $distribution->argmax());
         $this->assertSame($confidence, $distribution->confidence());
