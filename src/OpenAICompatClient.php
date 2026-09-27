@@ -51,6 +51,7 @@ use TypeSafeAI\Question\Choice;
 use TypeSafeAI\Question\Noul;
 use TypeSafeAI\Question\Question;
 use TypeSafeAI\Question\Score;
+use UnexpectedValueException;
 
 /**
  * Evaluates questions with a chat model through an OpenAI-compatible API, such as llama.cpp.
@@ -124,12 +125,21 @@ class OpenAICompatClient implements SystemOneClient
      * @throws GuzzleException On an HTTP error
      * @throws RuntimeException When the model writes content that is not JSON
      * @throws InvalidArgumentException When a question type is not supported
+     * @throws UnexpectedValueException When the model writes no probabilities for a question
      */
     public function systemOne(SystemOneRequest $request): SystemOneResult
     {
         $decisions = array_map($this->decision(...), $request->questions);
         $completion = $this->complete($request, $decisions);
 
+        return $this->result($completion, $decisions);
+    }
+
+    /**
+     * @param array<string, Decision> $decisions
+     */
+    private function result(Completion $completion, array $decisions): SystemOneResult
+    {
         $distributions = $this->serializer->deserializeJson($completion->choices[0]->message->content, Distributions::class);
 
         $result = new SystemOneResult();
@@ -139,7 +149,7 @@ class OpenAICompatClient implements SystemOneClient
         $result->answers = [];
 
         foreach ($decisions as $id => $decision) {
-            $result->answers[$id] = $decision->answer($distributions->distributions[$id]);
+            $result->answers[$id] = $decision->answer($distributions->probabilities($id));
         }
 
         return $result;
