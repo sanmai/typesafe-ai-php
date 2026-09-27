@@ -154,7 +154,6 @@ class OpenAICompatClientTest extends TestCase
                     'strict' => true,
                 ],
             ],
-            'temperature' => 0,
         ], $this->requestBody(0));
 
         // A choice option without a description is still an option
@@ -193,7 +192,7 @@ class OpenAICompatClientTest extends TestCase
     {
         $client = $this->client([self::completion(['no' => 0.5, 'yes' => 0.5])], [
             'max_tokens' => 16384,
-            'temperature' => null,
+            'model' => null,
             'chat_template_kwargs' => ['enable_thinking' => true],
         ]);
 
@@ -202,7 +201,7 @@ class OpenAICompatClientTest extends TestCase
         $body = $this->requestBody(0);
 
         $this->assertSame(16384, $body['max_tokens']);
-        $this->assertArrayNotHasKey('temperature', $body);
+        $this->assertArrayNotHasKey('model', $body);
         $this->assertSame(['enable_thinking' => true], $body['chat_template_kwargs']);
         $this->assertSame('json_schema', $body['response_format']['type']);
     }

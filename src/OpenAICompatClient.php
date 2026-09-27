@@ -181,7 +181,6 @@ class OpenAICompatClient implements SystemOneClient
                 'type' => 'json_schema',
                 'json_schema' => ['name' => 'distribution', 'schema' => self::schema($labels), 'strict' => true],
             ],
-            'temperature' => 0,
         ], $this->requestOptions), static fn($value) => null !== $value);
     }
 
