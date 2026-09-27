@@ -22,8 +22,6 @@ declare(strict_types=1);
 namespace TypeSafeAI;
 
 /**
- * Evaluates questions about a state. Each implementation uses a different backend.
- *
  * @phpstan-import-type ValueType from SystemOneRequest
  */
 interface SystemOneClient
