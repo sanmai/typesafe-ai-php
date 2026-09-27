@@ -59,7 +59,7 @@ class OpenAICompatClientTest extends TestCase
     private static function completion(array $probabilities, int $input = 100, int $output = 10): Response
     {
         return new Response(200, ['Content-Type' => 'application/json'], json_encode([
-            'model' => 'LocalLLM',
+            'model' => 'Default',
             'choices' => [[
                 'index' => 0,
                 'finish_reason' => 'stop',
@@ -148,7 +148,7 @@ class OpenAICompatClientTest extends TestCase
                 ->score('frustration', 'How frustrated is the customer?', ['Calm', 'Frustrated', 'Very angry']),
         );
 
-        $this->assertSame('LocalLLM', $response->model);
+        $this->assertSame('Default', $response->model);
         $this->assertSame(480, $response->usage->input_tokens);
         $this->assertSame(90, $response->usage->output_tokens);
 
@@ -290,7 +290,7 @@ class OpenAICompatClientTest extends TestCase
     public function testUndecodableContent(string $content): void
     {
         $client = $this->client([new Response(200, [], json_encode([
-            'model' => 'LocalLLM',
+            'model' => 'Default',
             'choices' => [['message' => ['content' => $content]]],
             'usage' => ['prompt_tokens' => 1, 'completion_tokens' => 1],
         ]))]);
