@@ -44,8 +44,6 @@ use TypeSafeAI\SystemOneRequest;
 
 /**
  * @covers \TypeSafeAI\OpenAICompatClient
- * @covers \TypeSafeAI\SystemOneEvaluator
- * @covers \TypeSafeAI\RequestContext
  */
 class OpenAICompatClientTest extends TestCase
 {
