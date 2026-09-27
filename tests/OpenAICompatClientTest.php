@@ -21,8 +21,6 @@ declare(strict_types=1);
 
 namespace Tests\TypeSafeAI;
 
-use function array_fill_keys;
-
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ServerException;
 use GuzzleHttp\Handler\MockHandler;
@@ -39,6 +37,7 @@ use function putenv;
 use Tests\TypeSafeAI\Doubles\ExampleState;
 use Tests\TypeSafeAI\Doubles\RankQuestion;
 use Tests\TypeSafeAI\Doubles\TicketDecision;
+use TypeSafeAI\OpenAICompat\SystemPrompt;
 use TypeSafeAI\OpenAICompatClient;
 use TypeSafeAI\SystemOneRequest;
 
@@ -178,55 +177,42 @@ class OpenAICompatClientTest extends TestCase
         $this->assertSame('Bearer secret', $request->getHeaderLine('Authorization'));
         $this->assertSame('application/json', $request->getHeaderLine('Content-Type'));
 
-        $this->assertJsonStringEqualsJsonString(json_encode([
-            'model' => 'qwen',
-            'messages' => [
-                ['role' => 'system', 'content' => OpenAICompatClient::SYSTEM_PROMPT],
-                ['role' => 'user', 'content' => "# State\n\n{\"message\":\"Help! My payouts have been failing for 3 days.\"}\n\n"
-                    . "# Question is_urgent\n\nDoes this convey urgency?\n\nOptions:\n- no\n- yes: Explicitly time-sensitive\n\n"
-                    . "# Question department\n\nWhich team should handle this?\n\nOptions:\n- billing: Payments, invoicing, refunds\n- technical: Bugs, outages, integrations\n- sales\n\n"
-                    . "# Question frustration\n\nHow frustrated is the customer?\n\nLevels:\n0: Calm\n1: Frustrated\n2: Very angry"],
-            ],
-            'response_format' => [
-                'type' => 'json_schema',
-                'json_schema' => ['name' => 'distributions', 'schema' => [
-                    'type' => 'object',
-                    'properties' => [
-                        'is_urgent' => self::schema(['no', 'yes']),
-                        // A choice option without a description is still an option
-                        'department' => self::schema(['billing', 'technical', 'sales']),
-                        'frustration' => self::schema(['0', '1', '2']),
-                    ],
-                    'required' => ['is_urgent', 'department', 'frustration'],
-                    'additionalProperties' => false,
-                ], 'strict' => true],
-            ],
-        ]), (string) $this->getLastRequest()->getBody());
+        $body = $this->requestBody(0);
+
+        $this->assertSame('qwen', $body['model']);
+        $this->assertSame([
+            ['role' => 'system', 'content' => SystemPrompt::PREAMBLE . "\n\n"
+                . "# Question is_urgent\n\nDoes this convey urgency?\n\nOptions:\n- no\n- yes: Explicitly time-sensitive\n\n"
+                . "# Question department\n\nWhich team should handle this?\n\nOptions:\n- billing: Payments, invoicing, refunds\n- technical: Bugs, outages, integrations\n- sales\n\n"
+                . "# Question frustration\n\nHow frustrated is the customer?\n\nLevels:\n0: Calm\n1: Frustrated\n2: Very angry"],
+            // The state only, after the questions
+            ['role' => 'user', 'content' => '{"message":"Help! My payouts have been failing for 3 days."}'],
+        ], $body['messages']);
+
+        $this->assertSame('json_schema', $body['response_format']['type']);
+        $this->assertSame('distributions', $body['response_format']['json_schema']['name']);
+        $this->assertTrue($body['response_format']['json_schema']['strict']);
+        $this->assertSame(['is_urgent', 'department', 'frustration'], $body['response_format']['json_schema']['schema']['required']);
+    }
+
+    public static function provideStates(): iterable
+    {
+        yield 'text' => ['Plain text', 'Plain text'];
+
+        // Private properties and nulls, as TypeSafeClient sends them
+        yield 'object' => [new ExampleState(), '{"id":42,"assignee":null,"secret":"private properties are sent too"}'];
     }
 
     /**
-     * @param list<string> $labels
+     * @dataProvider provideStates
      */
-    private static function schema(array $labels): array
-    {
-        return [
-            'type' => 'object',
-            'properties' => array_fill_keys($labels, ['type' => 'number']),
-            'required' => $labels,
-            'additionalProperties' => false,
-        ];
-    }
-
-    public function testStringState(): void
+    public function testUserMessage(string|object $state, string $expected): void
     {
         $client = $this->client([self::completion(['is_urgent' => ['no' => 0.5, 'yes' => 0.5]])]);
 
-        $client->systemOne(SystemOneRequest::build('Plain text')->noul('is_urgent', 'Urgent?'));
+        $client->systemOne(SystemOneRequest::build($state)->noul('is_urgent', 'Urgent?'));
 
-        $this->assertSame(
-            "# State\n\nPlain text\n\n# Question is_urgent\n\nUrgent?\n\nOptions:\n- no\n- yes",
-            $this->requestBody(0)['messages'][1]['content'],
-        );
+        $this->assertSame($expected, $this->requestBody(0)['messages'][1]['content']);
     }
 
     public function testRequestOptions(): void
@@ -284,19 +270,6 @@ class OpenAICompatClientTest extends TestCase
         $this->expectException(RuntimeException::class);
 
         $client->systemOne(SystemOneRequest::build('Plain text')->noul('is_urgent', 'Urgent?'));
-    }
-
-    public function testObjectState(): void
-    {
-        $client = $this->client([self::completion(['is_urgent' => ['no' => 0.5, 'yes' => 0.5]])]);
-
-        $client->systemOne(SystemOneRequest::build(new ExampleState())->noul('is_urgent', 'Urgent?'));
-
-        // Private properties and nulls, as TypeSafeClient sends them
-        $this->assertStringStartsWith(
-            "# State\n\n{\"id\":42,\"assignee\":null,\"secret\":\"private properties are sent too\"}\n\n",
-            $this->requestBody(0)['messages'][1]['content'],
-        );
     }
 
     public function testUnsupportedQuestion(): void

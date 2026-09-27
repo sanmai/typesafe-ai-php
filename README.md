@@ -212,6 +212,7 @@ Both clients implement `TypeSafeAI\SystemOneClient`: type-hint against it to cha
 There are differences from the TypeSafe API:
 
 - The client sends all questions in one request, without retries. The timeout is 120 seconds.
+- The questions are in the system message, and the state is the user message. For the same questions, the prompt prefix does not change, so the server can reuse its prompt cache.
 - A JSON schema sets the shape of the response: a probability for each option of each question. The client uses the probabilities unchanged, as it does with the TypeSafe API.
 - A yes/no question has the options `no` and `yes`, and a score has the level indices as options. A tie selects the first option in the response.
 - The request model is sent unchanged. llama.cpp ignores it; for other servers, specify it as for the TypeSafe API.

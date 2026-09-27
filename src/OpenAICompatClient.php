@@ -21,9 +21,7 @@ declare(strict_types=1);
 
 namespace TypeSafeAI;
 
-use function array_fill_keys;
 use function array_filter;
-use function array_keys;
 use function array_map;
 use function array_merge;
 use function get_debug_type;
@@ -31,9 +29,6 @@ use function getenv;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
-
-use function implode;
-
 use InvalidArgumentException;
 use JMS\Serializer\Exception\RuntimeException;
 use JMS\Serializer\SerializerInterface;
@@ -49,6 +44,8 @@ use TypeSafeAI\OpenAICompat\Decision\NoulDecision;
 use TypeSafeAI\OpenAICompat\Decision\ScoreDecision;
 use TypeSafeAI\OpenAICompat\DTO\Completion;
 use TypeSafeAI\OpenAICompat\DTO\Distributions;
+use TypeSafeAI\OpenAICompat\Schema;
+use TypeSafeAI\OpenAICompat\SystemPrompt;
 use TypeSafeAI\OpenAICompat\ValueFormatter;
 use TypeSafeAI\Question\Choice;
 use TypeSafeAI\Question\Noul;
@@ -59,12 +56,12 @@ use TypeSafeAI\Question\Score;
  * Evaluates questions with a chat model through an OpenAI-compatible API, such as llama.cpp.
  *
  * The model writes a probability distribution over the options of each question, all questions in one request.
+ *
+ * @final
  */
 class OpenAICompatClient implements SystemOneClient
 {
     use SystemOneEvaluator;
-
-    public const SYSTEM_PROMPT = 'You are a calibration engine. You never answer in prose. You output only a JSON object that maps each question ID to a probability distribution over the options of the question: all options included, values in [0,1], summing to 1. The options of a score question are its level indices.';
 
     public const BASE_URI = 'https://api.openai.com/v1';
 
@@ -164,66 +161,23 @@ class OpenAICompatClient implements SystemOneClient
     private function complete(SystemOneRequest $request, array $decisions): Completion
     {
         $response = $this->client->post(self::CHAT_COMPLETIONS, [
-            'json' => $this->body($request->model, $this->message($request->state, $decisions), self::schema($decisions)),
+            'json' => $this->body($request->model, SystemPrompt::of($decisions), $this->formatter->format($request->state), Schema::of($decisions)),
         ]);
 
         return $this->serializer->deserializeJson((string) $response->getBody(), Completion::class);
     }
 
     /**
-     * @param array<array-key, Decision> $decisions
-     */
-    private function message(mixed $state, array $decisions): string
-    {
-        $sections = ["# State\n\n" . $this->formatter->format($state)];
-
-        foreach ($decisions as $id => $decision) {
-            $sections[] = "# Question $id\n\n" . $decision->prompt();
-        }
-
-        return implode("\n\n", $sections);
-    }
-
-    /**
-     * Returns the JSON schema of an object that maps each question ID to a probability for each label.
-     *
-     * @param array<array-key, Decision> $decisions
-     * @return array<string, mixed>
-     */
-    private static function schema(array $decisions): array
-    {
-        return self::object(array_map(
-            static fn(Decision $decision) => self::object(array_fill_keys($decision->labels(), ['type' => 'number'])),
-            $decisions,
-        ));
-    }
-
-    /**
-     * @param array<array-key, mixed> $properties
-     * @return array<string, mixed>
-     */
-    private static function object(array $properties): array
-    {
-        return [
-            'type' => 'object',
-            // An object also for numeric keys, such as the level indices of a score
-            'properties' => (object) $properties,
-            'required' => array_map(strval(...), array_keys($properties)),
-            'additionalProperties' => false,
-        ];
-    }
-
-    /**
      * @param array<string, mixed> $schema
      * @return array<string, mixed>
      */
-    private function body(string $model, string $message, array $schema): array
+    private function body(string $model, string $system, string $user, array $schema): array
     {
         return array_filter(array_merge([
             'model' => $model,
             'messages' => [
-                ['role' => 'system', 'content' => self::SYSTEM_PROMPT],
-                ['role' => 'user', 'content' => $message],
+                ['role' => 'system', 'content' => $system],
+                ['role' => 'user', 'content' => $user],
             ],
             'response_format' => [
                 'type' => 'json_schema',
