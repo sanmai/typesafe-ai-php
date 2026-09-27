@@ -44,7 +44,7 @@ use function sprintf;
  */
 class TypeSafeClient implements SystemOneClient
 {
-    use EvaluatesAttributes;
+    use SystemOneEvaluator;
 
     public const BASE_URI = 'https://api.typesafe.ai';
 
