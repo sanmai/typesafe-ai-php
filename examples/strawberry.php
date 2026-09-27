@@ -40,20 +40,21 @@ class StrawberryRs
 }
 
 $client = TypeSafeClient::createInstance();
+
+$time = -microtime(true);
 $response = $client->evaluate("Strawberry", StrawberryRs::class);
+$time += microtime(true);
+$time = sprintf('%.4f', $time);
 
-echo "(Jev)  R's in Strawberry: {$response->rs->choice} (P={$response->rs->confidence})\n";
-
-foreach ($response->rs->probabilities as $option => $probability) {
-    echo "{$option}: {$probability}\n";
-}
+echo "(Jev) R's in Strawberry: {$response->rs->choice} (P={$response->rs->confidence}, t=$time)\n";
+echo json_encode($response->rs->probabilities), "\n";
 
 $client = OpenAICompatClient::createInstance(getenv('LLAMA_CPP_URL') ?: 'http://127.0.0.1:8080/v1');
 
+$time = -microtime(true);
 $response = $client->evaluate("Strawberry", StrawberryRs::class);
+$time += microtime(true);
+$time = sprintf('%.4f', $time);
 
-echo "(Qwen) R's in Strawberry: {$response->rs->choice} (P={$response->rs->confidence})\n";
-
-foreach ($response->rs->probabilities as $option => $probability) {
-    echo "{$option}: {$probability}\n";
-}
+echo "(llama) R's in Strawberry: {$response->rs->choice} (P={$response->rs->confidence}, t=$time)\n";
+echo json_encode($response->rs->probabilities), "\n";
