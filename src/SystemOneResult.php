@@ -21,16 +21,18 @@ declare(strict_types=1);
 
 namespace TypeSafeAI;
 
+use function get_debug_type;
+
 use JMS\Serializer\Annotation\Type;
+
+use function sprintf;
+
 use TypeSafeAI\DTO\Answer;
 use TypeSafeAI\DTO\ChoiceAnswer;
 use TypeSafeAI\DTO\NoulAnswer;
 use TypeSafeAI\DTO\ScoreAnswer;
 use TypeSafeAI\DTO\Usage;
 use UnexpectedValueException;
-
-use function get_debug_type;
-use function sprintf;
 
 class SystemOneResult
 {

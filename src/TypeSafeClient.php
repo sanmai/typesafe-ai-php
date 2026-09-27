@@ -21,21 +21,22 @@ declare(strict_types=1);
 
 namespace TypeSafeAI;
 
+use function array_merge;
+use function getenv;
+
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\MessageFormatter;
 use GuzzleHttp\Middleware;
 use GuzzleRetry\GuzzleRetryMiddleware;
+use InvalidArgumentException;
 use JMS\Serializer\Exception\LogicException;
 use JMS\Serializer\SerializerInterface;
-use InvalidArgumentException;
 use JSONSerializer\Contracts\JsonDeserializer;
 use JSONSerializer\Serializer;
 use Psr\Log\LoggerInterface;
 
-use function array_merge;
-use function getenv;
 use function range;
 use function sprintf;
 

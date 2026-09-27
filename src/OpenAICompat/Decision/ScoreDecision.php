@@ -19,16 +19,18 @@
 
 declare(strict_types=1);
 
-namespace TypeSafeAI\OpenAICompat;
-
-use TypeSafeAI\DTO\ScoreAnswer;
-use TypeSafeAI\Question\Score;
-use TypeSafeAI\SystemOneRequest;
+namespace TypeSafeAI\OpenAICompat\Decision;
 
 use function array_keys;
 use function array_map;
 use function array_values;
 use function implode;
+
+use TypeSafeAI\DTO\ScoreAnswer;
+use TypeSafeAI\OpenAICompat\Distribution;
+use TypeSafeAI\OpenAICompat\Text;
+use TypeSafeAI\Question\Score;
+use TypeSafeAI\SystemOneRequest;
 
 /**
  * @phpstan-import-type ValueType from SystemOneRequest

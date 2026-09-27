@@ -19,14 +19,16 @@
 
 declare(strict_types=1);
 
-namespace TypeSafeAI\OpenAICompat;
-
-use TypeSafeAI\DTO\ChoiceAnswer;
-use TypeSafeAI\Question\Choice;
+namespace TypeSafeAI\OpenAICompat\Decision;
 
 use function array_keys;
 use function array_map;
 use function implode;
+
+use TypeSafeAI\DTO\ChoiceAnswer;
+use TypeSafeAI\OpenAICompat\Distribution;
+use TypeSafeAI\OpenAICompat\Text;
+use TypeSafeAI\Question\Choice;
 
 /**
  * @final

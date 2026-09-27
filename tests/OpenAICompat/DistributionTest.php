@@ -21,13 +21,13 @@ declare(strict_types=1);
 
 namespace Tests\TypeSafeAI\OpenAICompat;
 
-use PHPUnit\Framework\TestCase;
-use TypeSafeAI\OpenAICompat\Distribution;
-use UnexpectedValueException;
-
 use function array_keys;
 use function array_map;
 use function json_decode;
+
+use PHPUnit\Framework\TestCase;
+use TypeSafeAI\OpenAICompat\Distribution;
+use UnexpectedValueException;
 
 /**
  * @covers \TypeSafeAI\OpenAICompat\Distribution

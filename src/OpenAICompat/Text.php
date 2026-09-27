@@ -21,10 +21,10 @@ declare(strict_types=1);
 
 namespace TypeSafeAI\OpenAICompat;
 
+use function is_string;
+
 use JMS\Serializer\SerializerInterface;
 use TypeSafeAI\RequestContext;
-
-use function is_string;
 
 /**
  * Converts values to prompt text.

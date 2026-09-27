@@ -28,16 +28,17 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
-use Tests\TypeSafeAI\Doubles\RankQuestion;
-use Tests\TypeSafeAI\Doubles\ExampleState;
-use Tests\TypeSafeAI\Doubles\TicketDecision;
-use TypeSafeAI\OpenAICompatClient;
-use TypeSafeAI\SystemOneRequest;
-use UnexpectedValueException;
 
 use function json_decode;
 use function json_encode;
 use function putenv;
+
+use Tests\TypeSafeAI\Doubles\ExampleState;
+use Tests\TypeSafeAI\Doubles\RankQuestion;
+use Tests\TypeSafeAI\Doubles\TicketDecision;
+use TypeSafeAI\OpenAICompatClient;
+use TypeSafeAI\SystemOneRequest;
+use UnexpectedValueException;
 
 /**
  * @covers \TypeSafeAI\OpenAICompatClient

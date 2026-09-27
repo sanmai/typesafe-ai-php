@@ -19,32 +19,33 @@
 
 declare(strict_types=1);
 
-namespace Tests\TypeSafeAI\OpenAICompat;
+namespace Tests\TypeSafeAI\OpenAICompat\Decision;
 
 use Closure;
-use JSONSerializer\Serializer;
-use PHPUnit\Framework\TestCase;
-use TypeSafeAI\OpenAICompat\ChoiceDecision;
-use TypeSafeAI\OpenAICompat\Distribution;
-use TypeSafeAI\OpenAICompat\NoulDecision;
-use TypeSafeAI\OpenAICompat\ScoreDecision;
-use TypeSafeAI\OpenAICompat\Text;
-use TypeSafeAI\Question\Choice;
-use TypeSafeAI\Question\Noul;
-use TypeSafeAI\Question\NoulCriteria;
-use TypeSafeAI\Question\Score;
 
 use function get_object_vars;
 
 use const JSON_UNESCAPED_SLASHES;
 use const JSON_UNESCAPED_UNICODE;
 
+use JSONSerializer\Serializer;
+use PHPUnit\Framework\TestCase;
+use TypeSafeAI\OpenAICompat\Decision\ChoiceDecision;
+use TypeSafeAI\OpenAICompat\Decision\NoulDecision;
+use TypeSafeAI\OpenAICompat\Decision\ScoreDecision;
+use TypeSafeAI\OpenAICompat\Distribution;
+use TypeSafeAI\OpenAICompat\Text;
+use TypeSafeAI\Question\Choice;
+use TypeSafeAI\Question\Noul;
+use TypeSafeAI\Question\NoulCriteria;
+use TypeSafeAI\Question\Score;
+
 /**
- * @covers \TypeSafeAI\OpenAICompat\ChoiceDecision
- * @covers \TypeSafeAI\OpenAICompat\NoulDecision
- * @covers \TypeSafeAI\OpenAICompat\ScoreDecision
+ * @covers \TypeSafeAI\OpenAICompat\Decision\ChoiceDecision
+ * @covers \TypeSafeAI\OpenAICompat\Decision\NoulDecision
+ * @covers \TypeSafeAI\OpenAICompat\Decision\ScoreDecision
  * @covers \TypeSafeAI\OpenAICompat\Text
- * @covers \TypeSafeAI\OpenAICompat\Labels
+ * @covers \TypeSafeAI\OpenAICompat\Decision\Labels
  */
 class DecisionTest extends TestCase
 {

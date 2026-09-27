@@ -19,11 +19,9 @@
 
 declare(strict_types=1);
 
-namespace TypeSafeAI\OpenAICompat;
+namespace TypeSafeAI\OpenAICompat\DTO;
 
-class CompletionUsage
+class CompletionMessage
 {
-    public int $prompt_tokens;
-
-    public int $completion_tokens;
+    public string $content;
 }

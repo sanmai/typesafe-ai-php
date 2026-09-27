@@ -19,6 +19,8 @@
 
 namespace Tests\TypeSafeAI;
 
+use function file_get_contents;
+
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ConnectException;
@@ -27,14 +29,14 @@ use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
 use JMS\Serializer\Exception\LogicException;
 use Psr\Log\AbstractLogger;
+
+use function putenv;
+
 use Stringable;
 use Tests\TypeSafeAI\Doubles\TicketDecision;
 use TypeSafeAI\SystemOneRequest;
 use TypeSafeAI\SystemOneResult;
 use TypeSafeAI\TypeSafeClient;
-
-use function file_get_contents;
-use function putenv;
 
 /**
  * @covers \TypeSafeAI\TypeSafeClient

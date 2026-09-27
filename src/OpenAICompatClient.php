@@ -21,6 +21,12 @@ declare(strict_types=1);
 
 namespace TypeSafeAI;
 
+use function array_fill_keys;
+use function array_filter;
+use function array_merge;
+use function get_debug_type;
+use function getenv;
+
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use InvalidArgumentException;
@@ -28,27 +34,23 @@ use JMS\Serializer\Exception\RuntimeException;
 use JMS\Serializer\SerializerInterface;
 use JSONSerializer\Contracts\JsonDeserializer;
 use JSONSerializer\Serializer;
+
+use function rtrim;
+use function sprintf;
+
 use TypeSafeAI\DTO\Usage;
-use TypeSafeAI\OpenAICompat\ChoiceDecision;
-use TypeSafeAI\OpenAICompat\Completion;
-use TypeSafeAI\OpenAICompat\Decision;
+use TypeSafeAI\OpenAICompat\Decision\ChoiceDecision;
+use TypeSafeAI\OpenAICompat\Decision\Decision;
+use TypeSafeAI\OpenAICompat\Decision\NoulDecision;
+use TypeSafeAI\OpenAICompat\Decision\ScoreDecision;
 use TypeSafeAI\OpenAICompat\Distribution;
-use TypeSafeAI\OpenAICompat\NoulDecision;
-use TypeSafeAI\OpenAICompat\ScoreDecision;
+use TypeSafeAI\OpenAICompat\DTO\Completion;
 use TypeSafeAI\OpenAICompat\Text;
 use TypeSafeAI\Question\Choice;
 use TypeSafeAI\Question\Noul;
 use TypeSafeAI\Question\Question;
 use TypeSafeAI\Question\Score;
 use UnexpectedValueException;
-
-use function array_fill_keys;
-use function array_filter;
-use function array_merge;
-use function get_debug_type;
-use function getenv;
-use function rtrim;
-use function sprintf;
 
 /**
  * Evaluates questions with a chat model through an OpenAI-compatible API, such as llama.cpp.

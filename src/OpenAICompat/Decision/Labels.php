@@ -19,7 +19,7 @@
 
 declare(strict_types=1);
 
-namespace TypeSafeAI\OpenAICompat;
+namespace TypeSafeAI\OpenAICompat\Decision;
 
 use function array_map;
 use function implode;

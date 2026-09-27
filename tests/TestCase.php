@@ -19,31 +19,39 @@
 
 namespace Tests\TypeSafeAI;
 
-use GuzzleHttp\Handler\MockHandler;
-use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Middleware;
-use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Psr7\Response;
-use JSONSerializer\Contracts\JsonDeserializer;
-use TypeSafeAI\TypeSafeClient;
-use JMS\Serializer\SerializerInterface;
-use JSONSerializer;
-use ReflectionObject;
-
 use function array_walk;
 use function dirname;
 use function end;
 use function file_get_contents;
 use function get_class;
+
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
+
 use function is_array;
+
+use JMS\Serializer\SerializerInterface;
+
 use function json_decode;
 use function json_encode;
-use function ksort;
-use function sprintf;
-use function str_replace;
 
 use const JSON_PRETTY_PRINT;
 use const JSON_UNESCAPED_UNICODE;
+
+use JSONSerializer;
+use JSONSerializer\Contracts\JsonDeserializer;
+
+use function ksort;
+
+use ReflectionObject;
+
+use function sprintf;
+use function str_replace;
+
+use TypeSafeAI\TypeSafeClient;
 
 abstract class TestCase extends \PHPUnit\Framework\TestCase
 {

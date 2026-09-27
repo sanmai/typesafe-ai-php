@@ -19,7 +19,7 @@
 
 declare(strict_types=1);
 
-namespace TypeSafeAI\OpenAICompat;
+namespace TypeSafeAI\OpenAICompat\DTO;
 
 use JMS\Serializer\Annotation\Type;
 
@@ -33,7 +33,7 @@ class Completion
     /**
      * @var list<CompletionChoice>
      */
-    #[Type('array<TypeSafeAI\OpenAICompat\CompletionChoice>')]
+    #[Type('array<TypeSafeAI\OpenAICompat\DTO\CompletionChoice>')]
     public array $choices;
 
     public CompletionUsage $usage;

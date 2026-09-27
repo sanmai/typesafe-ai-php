@@ -21,8 +21,6 @@ declare(strict_types=1);
 
 namespace TypeSafeAI\OpenAICompat;
 
-use UnexpectedValueException;
-
 use function abs;
 use function array_keys;
 use function array_search;
@@ -33,9 +31,12 @@ use function is_float;
 use function is_int;
 use function ksort;
 use function max;
-use function sprintf;
 
 use const SORT_STRING;
+
+use function sprintf;
+
+use UnexpectedValueException;
 
 /**
  * A probability distribution over a label set, as verbalized by a model.

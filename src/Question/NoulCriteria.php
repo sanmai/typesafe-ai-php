@@ -21,12 +21,12 @@ declare(strict_types=1);
 
 namespace TypeSafeAI\Question;
 
+use function array_filter;
+
 use JMS\Serializer\Annotation\Exclude;
 use JMS\Serializer\Annotation\Inline;
 use JMS\Serializer\Annotation\Type;
 use JMS\Serializer\Annotation\VirtualProperty;
-
-use function array_filter;
 
 /**
  * Optional descriptions of what a yes and a no mean.
