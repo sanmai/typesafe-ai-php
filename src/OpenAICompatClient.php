@@ -61,7 +61,7 @@ use const JSON_UNESCAPED_UNICODE;
  */
 class OpenAICompatClient implements SystemOneClient
 {
-    use EvaluatesAttributes;
+    use SystemOneEvaluator;
 
     public const SYSTEM_PROMPT = "You are a calibration engine. You never answer in prose. You output only a JSON object with the key 'probabilities' mapping every given option to a probability, all options included, values in [0,1], summing to 1.";
 

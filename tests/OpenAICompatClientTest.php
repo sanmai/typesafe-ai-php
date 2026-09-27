@@ -41,7 +41,7 @@ use function putenv;
 
 /**
  * @covers \TypeSafeAI\OpenAICompatClient
- * @covers \TypeSafeAI\EvaluatesAttributes
+ * @covers \TypeSafeAI\SystemOneEvaluator
  * @covers \TypeSafeAI\RequestContext
  */
 class OpenAICompatClientTest extends TestCase
