@@ -19,9 +19,14 @@
 
 declare(strict_types=1);
 
+// The same question for the TypeSafe API and for a local model, with the time of each request.
+//
+// Run: TYPESAFE_API_KEY=your-api-key OPENAI_BASE_URL=http://127.0.0.1:8080/v1 php examples/strawberry.php
+
 use TypeSafeAI\DTO\ChoiceAnswer;
 use TypeSafeAI\OpenAICompatClient;
 use TypeSafeAI\Question\Choice;
+use TypeSafeAI\SystemOneClient;
 use TypeSafeAI\TypeSafeClient;
 
 require 'vendor/autoload.php';
@@ -39,22 +44,18 @@ class StrawberryRs
     ) {}
 }
 
-$client = TypeSafeClient::createInstance();
+/** @var array<string, SystemOneClient> $clients */
+$clients = [
+    'Jev' => TypeSafeClient::createInstance(),
+    'llama' => OpenAICompatClient::createInstance(),
+];
 
-$time = -microtime(true);
-$response = $client->evaluate("Strawberry", StrawberryRs::class);
-$time += microtime(true);
-$time = sprintf('%.4f', $time);
+foreach ($clients as $name => $client) {
+    $time = -microtime(true);
+    $response = $client->evaluate("Strawberry", StrawberryRs::class);
+    $time += microtime(true);
+    $time = sprintf('%.4f', $time);
 
-echo "(Jev) R's in Strawberry: {$response->rs->choice} (P={$response->rs->confidence}, t=$time)\n";
-echo json_encode($response->rs->probabilities), "\n";
-
-$client = OpenAICompatClient::createInstance(getenv('LLAMA_CPP_URL') ?: 'http://127.0.0.1:8080/v1');
-
-$time = -microtime(true);
-$response = $client->evaluate("Strawberry", StrawberryRs::class);
-$time += microtime(true);
-$time = sprintf('%.4f', $time);
-
-echo "(llama) R's in Strawberry: {$response->rs->choice} (P={$response->rs->confidence}, t=$time)\n";
-echo json_encode($response->rs->probabilities), "\n";
+    echo "($name) R's in Strawberry: {$response->rs->choice} (P={$response->rs->confidence}, t=$time)\n";
+    echo json_encode($response->rs->probabilities), "\n";
+}

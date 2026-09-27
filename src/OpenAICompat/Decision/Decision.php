@@ -34,7 +34,7 @@ interface Decision
     public function labels(): array;
 
     /**
-     * Returns the question section of the user message.
+     * Returns the question section of the system message.
      */
     public function prompt(): string;
 

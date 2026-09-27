@@ -98,14 +98,15 @@ class OpenAICompatClient implements SystemOneClient
             'headers' => null === $apiKey ? [] : ['Authorization' => "Bearer $apiKey"],
         ], $clientOptions));
 
+        $serializer = Serializer::withJSONOptions();
+
         return new self(
             $httpClient,
-            Serializer::withJSONOptions(),
+            $serializer,
+            new ValueFormatter($serializer),
             $requestOptions,
         );
     }
-
-    private readonly ValueFormatter $formatter;
 
     /**
      * @param array<string, mixed> $requestOptions
@@ -113,10 +114,9 @@ class OpenAICompatClient implements SystemOneClient
     public function __construct(
         private readonly Client $client,
         private readonly SerializerInterface&JsonDeserializer $serializer,
+        private readonly ValueFormatter $formatter,
         private readonly array $requestOptions = [],
-    ) {
-        $this->formatter = new ValueFormatter($serializer);
-    }
+    ) {}
 
     /**
      * Answers all questions about the state with a single chat request.

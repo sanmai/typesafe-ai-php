@@ -239,8 +239,8 @@ TYPESAFE_API_KEY=your-api-key php examples/urgency.php
 - [routing.php](examples/routing.php): a choice between teams, with the probability of each option.
 - [frustration.php](examples/frustration.php): a score along ordered levels.
 - [chat-log.php](examples/chat-log.php): questions of all three types about a chat log, in one request.
-- [attributes.php](examples/attributes.php): a result declaring its own questions using attributes.
-- [llama-cpp.php](examples/llama-cpp.php): the questions from `attributes.php`, evaluated by a local model with llama.cpp.
+- [attributes.php](examples/attributes.php): a result declaring its own questions using attributes. Set `OPENAI_BASE_URL` to evaluate them with a local model.
+- [strawberry.php](examples/strawberry.php): the same question for the TypeSafe API and for a local model, with the time of each request. Set `OPENAI_BASE_URL` to the local endpoint.
 - [errors.php](examples/errors.php): an invalid request, and the validation error as returned by the API.
 
 ## Errors and Retries
