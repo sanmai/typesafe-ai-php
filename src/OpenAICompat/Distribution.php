@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace TypeSafeAI\OpenAICompat;
 
 use function abs;
+use function array_fill_keys;
 use function array_keys;
 use function array_search;
 use function array_sum;
@@ -53,6 +54,30 @@ class Distribution
      * @param non-empty-array<array-key, float> $probabilities Each label mapped to its probability, in label order.
      */
     private function __construct(public readonly array $probabilities) {}
+
+    /**
+     * Returns the JSON schema of a {"probabilities": {...}} object over the labels.
+     *
+     * @param list<string> $labels
+     * @return array<string, mixed>
+     */
+    public static function schema(array $labels): array
+    {
+        return [
+            'type' => 'object',
+            'properties' => [
+                'probabilities' => [
+                    'type' => 'object',
+                    // An object also for the level indices of a score
+                    'properties' => (object) array_fill_keys($labels, ['type' => 'number']),
+                    'required' => $labels,
+                    'additionalProperties' => false,
+                ],
+            ],
+            'required' => ['probabilities'],
+            'additionalProperties' => false,
+        ];
+    }
 
     /**
      * Validates a decoded {"probabilities": {...}} object against the labels.

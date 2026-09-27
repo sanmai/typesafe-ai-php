@@ -24,6 +24,7 @@ namespace Tests\TypeSafeAI\OpenAICompat;
 use function array_keys;
 use function array_map;
 use function json_decode;
+use function json_encode;
 
 use PHPUnit\Framework\TestCase;
 use TypeSafeAI\OpenAICompat\Distribution;
@@ -109,5 +110,24 @@ class DistributionTest extends TestCase
 
         $this->assertSame($label, $distribution->argmax());
         $this->assertSame($confidence, $distribution->confidence());
+    }
+
+    public static function provideSchema(): iterable
+    {
+        yield 'options' => [['no', 'yes'], '{"no":{"type":"number"},"yes":{"type":"number"}}'];
+
+        // Level indices must be keys of an object, not a list
+        yield 'level indices' => [['0', '1'], '{"0":{"type":"number"},"1":{"type":"number"}}'];
+    }
+
+    /**
+     * @dataProvider provideSchema
+     */
+    public function testSchema(array $labels, string $properties): void
+    {
+        $this->assertSame(
+            '{"type":"object","properties":{"probabilities":{"type":"object","properties":' . $properties . ',"required":' . json_encode($labels) . ',"additionalProperties":false}},"required":["probabilities"],"additionalProperties":false}',
+            json_encode(Distribution::schema($labels)),
+        );
     }
 }

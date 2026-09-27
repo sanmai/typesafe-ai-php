@@ -44,7 +44,7 @@ class SystemOneResult
     #[Type('array<string, TypeSafeAI\DTO\Answer>')]
     public array $answers;
 
-    public Usage $usage;
+    public function __construct(public Usage $usage = new Usage()) {}
 
     public function noul(string $id): NoulAnswer
     {

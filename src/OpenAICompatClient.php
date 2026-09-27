@@ -21,7 +21,6 @@ declare(strict_types=1);
 
 namespace TypeSafeAI;
 
-use function array_fill_keys;
 use function array_filter;
 use function array_merge;
 use function get_debug_type;
@@ -38,7 +37,6 @@ use JSONSerializer\Serializer;
 use function rtrim;
 use function sprintf;
 
-use TypeSafeAI\DTO\Usage;
 use TypeSafeAI\OpenAICompat\Decision\ChoiceDecision;
 use TypeSafeAI\OpenAICompat\Decision\Decision;
 use TypeSafeAI\OpenAICompat\Decision\NoulDecision;
@@ -131,7 +129,6 @@ class OpenAICompatClient implements SystemOneClient
         $result = new SystemOneResult();
         $result->model = $request->model;
         $result->answers = [];
-        $result->usage = new Usage();
         $result->usage->input_tokens = 0;
         $result->usage->output_tokens = 0;
 
@@ -201,30 +198,8 @@ class OpenAICompatClient implements SystemOneClient
             ],
             'response_format' => [
                 'type' => 'json_schema',
-                'json_schema' => ['name' => 'distribution', 'schema' => self::schema($labels), 'strict' => true],
+                'json_schema' => ['name' => 'distribution', 'schema' => Distribution::schema($labels), 'strict' => true],
             ],
         ], $this->requestOptions), static fn($value) => null !== $value);
-    }
-
-    /**
-     * @param list<string> $labels
-     * @return array<string, mixed>
-     */
-    private static function schema(array $labels): array
-    {
-        return [
-            'type' => 'object',
-            'properties' => [
-                'probabilities' => [
-                    'type' => 'object',
-                    // An object also for the level indices of a score
-                    'properties' => (object) array_fill_keys($labels, ['type' => 'number']),
-                    'required' => $labels,
-                    'additionalProperties' => false,
-                ],
-            ],
-            'required' => ['probabilities'],
-            'additionalProperties' => false,
-        ];
     }
 }
