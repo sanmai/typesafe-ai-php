@@ -38,6 +38,8 @@ use function putenv;
 
 /**
  * @covers \TypeSafeAI\TypeSafeClient
+ * @covers \TypeSafeAI\SystemOneEvaluator
+ * @covers \TypeSafeAI\RequestContext
  */
 class TypeSafeClientTest extends TestCase
 {
