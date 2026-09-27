@@ -24,6 +24,7 @@ declare(strict_types=1);
 // Run: TYPESAFE_API_KEY=your-api-key OPENAI_BASE_URL=http://127.0.0.1:8080/v1 php examples/strawberry.php
 
 use TypeSafeAI\DTO\ChoiceAnswer;
+use TypeSafeAI\OpenAICompatClient;
 use TypeSafeAI\Question\Choice;
 use TypeSafeAI\SystemOneClient;
 use TypeSafeAI\TypeSafeClient;
@@ -46,6 +47,7 @@ class StrawberryRs
 /** @var array<string, SystemOneClient> $clients */
 $clients = [
     'Jev' => TypeSafeClient::createInstance(),
+    'llama' => OpenAICompatClient::createInstance(),
 ];
 
 foreach ($clients as $name => $client) {

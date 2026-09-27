@@ -19,22 +19,22 @@
 
 declare(strict_types=1);
 
-namespace TypeSafeAI;
+namespace TypeSafeAI\OpenAICompat\DTO;
+
+use JMS\Serializer\Annotation\Type;
 
 /**
- * Evaluates questions about a state. Each implementation uses a different backend.
- *
- * @phpstan-import-type ValueType from SystemOneRequest
+ * This DTO defines the fields of a chat completion response that the client uses.
  */
-interface SystemOneClient
+class Completion
 {
-    public function systemOne(SystemOneRequest $request): SystemOneResult;
+    public string $model;
 
     /**
-     * @template TResult of object
-     * @param ValueType $state
-     * @param class-string<TResult> $class
-     * @return TResult
+     * @var list<CompletionChoice>
      */
-    public function evaluate(string|array|object $state, string $class, string $model = SystemOneRequest::MODEL_LATEST): object;
+    #[Type('array<TypeSafeAI\OpenAICompat\DTO\CompletionChoice>')]
+    public array $choices;
+
+    public CompletionUsage $usage;
 }

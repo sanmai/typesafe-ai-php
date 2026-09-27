@@ -188,6 +188,45 @@ foreach ($client->models()->models as $model) {
 
 Questions are plain data objects. The client serializes their properties to JSON, null values included.
 
+### Local Models
+
+`OpenAICompatClient` evaluates the same requests with a chat model through an OpenAI-compatible API, such as [llama.cpp](https://github.com/ggml-org/llama.cpp) or vLLM. The model writes a probability distribution over the options of each question, and the client converts it to the same answer types as the TypeSafe API.
+
+```php
+use TypeSafeAI\OpenAICompatClient;
+
+$client = OpenAICompatClient::createInstance('http://127.0.0.1:8080/v1');
+
+$decision = $client->evaluate($ticket, TicketDecision::class);
+$response = $client->systemOne($request);
+```
+
+Without arguments, the client reads `OPENAI_BASE_URL` and `OPENAI_API_KEY`, the same variables as the OpenAI SDKs. Without `OPENAI_BASE_URL`, it uses the OpenAI API. The API key is optional: without one, the client sends no `Authorization` header.
+
+```php
+$client = OpenAICompatClient::createInstance();
+```
+
+Both clients implement `TypeSafeAI\SystemOneClient`: type-hint against it to change the backend without other changes.
+
+There are differences from the TypeSafe API:
+
+- The client sends all questions in one request, without retries. The timeout is 120 seconds.
+- The questions are in the system message, and the state is the user message. For the same questions, the prompt prefix does not change, so the server can reuse its prompt cache.
+- A JSON schema sets the shape of the response: a probability for each option of each question. The client uses the probabilities unchanged, as it does with the TypeSafe API.
+- A yes/no question has the options `no` and `yes`, and a score has the level indices as options. A tie selects the first option in the response.
+- The request model is sent unchanged. llama.cpp ignores it; for other servers, specify it as for the TypeSafe API.
+- The request does not set a temperature or a token limit, so the server defaults apply. A response that stops at the token limit is not valid JSON, and the client throws a JMS `RuntimeException`.
+
+`createInstance()` takes an optional endpoint and API key, then `$requestOptions` to change the request body. A null value removes a field. For example, to set a token limit, and to remove `model` for a server that rejects it:
+
+```php
+$client = OpenAICompatClient::createInstance('http://127.0.0.1:8080/v1', requestOptions: [
+    'max_tokens' => 16384,
+    'model' => null,
+]);
+```
+
 ## Examples
 
 Check out the [examples](examples/) directory. Examples use the API key from the `TYPESAFE_API_KEY` environment variable:
@@ -200,7 +239,8 @@ TYPESAFE_API_KEY=your-api-key php examples/urgency.php
 - [routing.php](examples/routing.php): a choice between teams, with the probability of each option.
 - [frustration.php](examples/frustration.php): a score along ordered levels.
 - [chat-log.php](examples/chat-log.php): questions of all three types about a chat log, in one request.
-- [attributes.php](examples/attributes.php): a result declaring its own questions using attributes.
+- [attributes.php](examples/attributes.php): a result declaring its own questions using attributes. Set `OPENAI_BASE_URL` to evaluate them with a local model.
+- [strawberry.php](examples/strawberry.php): the same question for the TypeSafe API and for a local model, with the time of each request. Set `OPENAI_BASE_URL` to the local endpoint.
 - [errors.php](examples/errors.php): an invalid request, and the validation error as returned by the API.
 
 ## Errors and Retries

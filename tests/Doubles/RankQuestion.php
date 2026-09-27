@@ -19,22 +19,11 @@
 
 declare(strict_types=1);
 
-namespace TypeSafeAI;
+namespace Tests\TypeSafeAI\Doubles;
 
-/**
- * Evaluates questions about a state. Each implementation uses a different backend.
- *
- * @phpstan-import-type ValueType from SystemOneRequest
- */
-interface SystemOneClient
+use TypeSafeAI\Question\Question;
+
+class RankQuestion implements Question
 {
-    public function systemOne(SystemOneRequest $request): SystemOneResult;
-
-    /**
-     * @template TResult of object
-     * @param ValueType $state
-     * @param class-string<TResult> $class
-     * @return TResult
-     */
-    public function evaluate(string|array|object $state, string $class, string $model = SystemOneRequest::MODEL_LATEST): object;
+    public string $type = 'rank';
 }

@@ -19,22 +19,31 @@
 
 declare(strict_types=1);
 
-namespace TypeSafeAI;
+namespace TypeSafeAI\OpenAICompat;
+
+use function is_string;
+
+use JMS\Serializer\SerializerInterface;
+use TypeSafeAI\RequestContext;
 
 /**
- * Evaluates questions about a state. Each implementation uses a different backend.
+ * Converts values to prompt text.
  *
- * @phpstan-import-type ValueType from SystemOneRequest
+ * @final
  */
-interface SystemOneClient
+class ValueFormatter
 {
-    public function systemOne(SystemOneRequest $request): SystemOneResult;
+    public function __construct(private readonly SerializerInterface $serializer) {}
 
     /**
-     * @template TResult of object
-     * @param ValueType $state
-     * @param class-string<TResult> $class
-     * @return TResult
+     * Returns text unchanged, null as an empty string, and structured data as JSON, serialized as TypeSafeClient sends it.
      */
-    public function evaluate(string|array|object $state, string $class, string $model = SystemOneRequest::MODEL_LATEST): object;
+    public function format(mixed $value): string
+    {
+        return match (true) {
+            is_string($value) => $value,
+            null === $value => '',
+            default => $this->serializer->serialize($value, 'json', RequestContext::create()),
+        };
+    }
 }

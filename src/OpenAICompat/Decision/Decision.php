@@ -19,22 +19,29 @@
 
 declare(strict_types=1);
 
-namespace TypeSafeAI;
+namespace TypeSafeAI\OpenAICompat\Decision;
+
+use TypeSafeAI\DTO\Answer;
 
 /**
- * Evaluates questions about a state. Each implementation uses a different backend.
- *
- * @phpstan-import-type ValueType from SystemOneRequest
+ * Presents a question to a chat model as a distribution over a label set.
  */
-interface SystemOneClient
+interface Decision
 {
-    public function systemOne(SystemOneRequest $request): SystemOneResult;
+    /**
+     * @return list<string>
+     */
+    public function labels(): array;
 
     /**
-     * @template TResult of object
-     * @param ValueType $state
-     * @param class-string<TResult> $class
-     * @return TResult
+     * Returns the question section of the system message.
      */
-    public function evaluate(string|array|object $state, string $class, string $model = SystemOneRequest::MODEL_LATEST): object;
+    public function prompt(): string;
+
+    /**
+     * Converts the probabilities to an answer, as the TypeSafe API returns it.
+     *
+     * @param non-empty-array<array-key, float> $probabilities Each label mapped to its probability.
+     */
+    public function answer(array $probabilities): Answer;
 }

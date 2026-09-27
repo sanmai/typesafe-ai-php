@@ -19,22 +19,11 @@
 
 declare(strict_types=1);
 
-namespace TypeSafeAI;
+namespace TypeSafeAI\OpenAICompat\DTO;
 
-/**
- * Evaluates questions about a state. Each implementation uses a different backend.
- *
- * @phpstan-import-type ValueType from SystemOneRequest
- */
-interface SystemOneClient
+class CompletionUsage
 {
-    public function systemOne(SystemOneRequest $request): SystemOneResult;
+    public int $prompt_tokens;
 
-    /**
-     * @template TResult of object
-     * @param ValueType $state
-     * @param class-string<TResult> $class
-     * @return TResult
-     */
-    public function evaluate(string|array|object $state, string $class, string $model = SystemOneRequest::MODEL_LATEST): object;
+    public int $completion_tokens;
 }

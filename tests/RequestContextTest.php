@@ -19,22 +19,23 @@
 
 declare(strict_types=1);
 
-namespace TypeSafeAI;
+namespace Tests\TypeSafeAI;
+
+use PHPUnit\Framework\TestCase;
+use TypeSafeAI\RequestContext;
 
 /**
- * Evaluates questions about a state. Each implementation uses a different backend.
- *
- * @phpstan-import-type ValueType from SystemOneRequest
+ * @covers \TypeSafeAI\RequestContext
  */
-interface SystemOneClient
+class RequestContextTest extends TestCase
 {
-    public function systemOne(SystemOneRequest $request): SystemOneResult;
+    public function testSerializesNull(): void
+    {
+        $this->assertTrue(RequestContext::create()->shouldSerializeNull());
+    }
 
-    /**
-     * @template TResult of object
-     * @param ValueType $state
-     * @param class-string<TResult> $class
-     * @return TResult
-     */
-    public function evaluate(string|array|object $state, string $class, string $model = SystemOneRequest::MODEL_LATEST): object;
+    public function testCreatesNewContext(): void
+    {
+        $this->assertNotSame(RequestContext::create(), RequestContext::create());
+    }
 }
