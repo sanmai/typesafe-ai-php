@@ -48,7 +48,7 @@ use TypeSafeAI\OpenAICompat\Decision\Decision;
 use TypeSafeAI\OpenAICompat\Decision\NoulDecision;
 use TypeSafeAI\OpenAICompat\Decision\ScoreDecision;
 use TypeSafeAI\OpenAICompat\DTO\Completion;
-use TypeSafeAI\OpenAICompat\Text;
+use TypeSafeAI\OpenAICompat\ValueFormatter;
 use TypeSafeAI\Question\Choice;
 use TypeSafeAI\Question\Noul;
 use TypeSafeAI\Question\Question;
@@ -107,7 +107,7 @@ class OpenAICompatClient implements SystemOneClient
         );
     }
 
-    private readonly Text $text;
+    private readonly ValueFormatter $formatter;
 
     /**
      * @param array<string, mixed> $requestOptions
@@ -117,7 +117,7 @@ class OpenAICompatClient implements SystemOneClient
         private readonly SerializerInterface&JsonDeserializer $serializer,
         private readonly array $requestOptions = [],
     ) {
-        $this->text = new Text($serializer);
+        $this->formatter = new ValueFormatter($serializer);
     }
 
     /**
@@ -155,9 +155,9 @@ class OpenAICompatClient implements SystemOneClient
     private function decision(Question $question): Decision
     {
         return match (true) {
-            $question instanceof Noul => new NoulDecision($question, $this->text),
-            $question instanceof Choice => new ChoiceDecision($question, $this->text),
-            $question instanceof Score => new ScoreDecision($question, $this->text),
+            $question instanceof Noul => new NoulDecision($question, $this->formatter),
+            $question instanceof Choice => new ChoiceDecision($question, $this->formatter),
+            $question instanceof Score => new ScoreDecision($question, $this->formatter),
             default => throw new InvalidArgumentException(sprintf('Question type %s is not supported', get_debug_type($question))),
         };
     }
@@ -179,7 +179,7 @@ class OpenAICompatClient implements SystemOneClient
      */
     private function message(mixed $state, array $decisions): string
     {
-        $sections = ["# State\n\n" . $this->text->of($state)];
+        $sections = ["# State\n\n" . $this->formatter->format($state)];
 
         foreach ($decisions as $id => $decision) {
             $sections[] = "# Question $id\n\n" . $decision->prompt();

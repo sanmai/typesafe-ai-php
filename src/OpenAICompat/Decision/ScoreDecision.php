@@ -28,7 +28,7 @@ use function implode;
 use function max;
 
 use TypeSafeAI\DTO\ScoreAnswer;
-use TypeSafeAI\OpenAICompat\Text;
+use TypeSafeAI\OpenAICompat\ValueFormatter;
 use TypeSafeAI\Question\Score;
 use TypeSafeAI\SystemOneRequest;
 
@@ -45,7 +45,7 @@ class ScoreDecision implements Decision
 
     public function __construct(
         private readonly Score $question,
-        private readonly Text $text,
+        private readonly ValueFormatter $formatter,
     ) {
         $this->levels = array_values($question->criteria);
     }
@@ -60,10 +60,10 @@ class ScoreDecision implements Decision
         $lines = [];
 
         foreach ($this->levels as $level => $description) {
-            $lines[] = "$level: " . $this->text->of($description);
+            $lines[] = "$level: " . $this->formatter->format($description);
         }
 
-        return $this->text->of($this->question->instructions)
+        return $this->formatter->format($this->question->instructions)
             . "\n\nLevels:\n" . implode("\n", $lines);
     }
 

@@ -22,7 +22,7 @@ declare(strict_types=1);
 namespace TypeSafeAI\OpenAICompat\Decision;
 
 use TypeSafeAI\DTO\NoulAnswer;
-use TypeSafeAI\OpenAICompat\Text;
+use TypeSafeAI\OpenAICompat\ValueFormatter;
 use TypeSafeAI\Question\Choice;
 use TypeSafeAI\Question\Noul;
 
@@ -35,12 +35,12 @@ class NoulDecision implements Decision
 {
     private readonly ChoiceDecision $choice;
 
-    public function __construct(Noul $question, Text $text)
+    public function __construct(Noul $question, ValueFormatter $formatter)
     {
         $this->choice = new ChoiceDecision(new Choice($question->instructions, [
             'no' => $question->criteria->false,
             'yes' => $question->criteria->true,
-        ]), $text);
+        ]), $formatter);
     }
 
     public function labels(): array

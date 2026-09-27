@@ -28,7 +28,7 @@ use function implode;
 use function max;
 
 use TypeSafeAI\DTO\ChoiceAnswer;
-use TypeSafeAI\OpenAICompat\Text;
+use TypeSafeAI\OpenAICompat\ValueFormatter;
 use TypeSafeAI\Question\Choice;
 
 /**
@@ -38,7 +38,7 @@ class ChoiceDecision implements Decision
 {
     public function __construct(
         private readonly Choice $question,
-        private readonly Text $text,
+        private readonly ValueFormatter $formatter,
     ) {}
 
     public function labels(): array
@@ -51,11 +51,11 @@ class ChoiceDecision implements Decision
         $lines = [];
 
         foreach ($this->question->criteria as $label => $description) {
-            $text = $this->text->of($description);
+            $text = $this->formatter->format($description);
             $lines[] = '' === $text ? "- $label" : "- $label: $text";
         }
 
-        return $this->text->of($this->question->instructions)
+        return $this->formatter->format($this->question->instructions)
             . "\n\nOptions:\n" . implode("\n", $lines);
     }
 

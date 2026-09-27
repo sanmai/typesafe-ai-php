@@ -31,14 +31,14 @@ use TypeSafeAI\RequestContext;
  *
  * @final
  */
-class Text
+class ValueFormatter
 {
     public function __construct(private readonly SerializerInterface $serializer) {}
 
     /**
      * Returns text unchanged, null as an empty string, and structured data as JSON, serialized as TypeSafeClient sends it.
      */
-    public function of(mixed $value): string
+    public function format(mixed $value): string
     {
         return match (true) {
             is_string($value) => $value,

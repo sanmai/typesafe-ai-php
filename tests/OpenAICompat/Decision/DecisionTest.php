@@ -33,7 +33,7 @@ use PHPUnit\Framework\TestCase;
 use TypeSafeAI\OpenAICompat\Decision\ChoiceDecision;
 use TypeSafeAI\OpenAICompat\Decision\NoulDecision;
 use TypeSafeAI\OpenAICompat\Decision\ScoreDecision;
-use TypeSafeAI\OpenAICompat\Text;
+use TypeSafeAI\OpenAICompat\ValueFormatter;
 use TypeSafeAI\Question\Choice;
 use TypeSafeAI\Question\Noul;
 use TypeSafeAI\Question\NoulCriteria;
@@ -43,7 +43,7 @@ use TypeSafeAI\Question\Score;
  * @covers \TypeSafeAI\OpenAICompat\Decision\ChoiceDecision
  * @covers \TypeSafeAI\OpenAICompat\Decision\NoulDecision
  * @covers \TypeSafeAI\OpenAICompat\Decision\ScoreDecision
- * @covers \TypeSafeAI\OpenAICompat\Text
+ * @covers \TypeSafeAI\OpenAICompat\ValueFormatter
  */
 class DecisionTest extends TestCase
 {
@@ -51,78 +51,78 @@ class DecisionTest extends TestCase
     {
         // The rendered examples from the specification
         yield 'choice' => [
-            static fn(Text $text) => new ChoiceDecision(new Choice('Select the primary requested action. A mention without a request does not establish intent.', [
+            static fn(ValueFormatter $formatter) => new ChoiceDecision(new Choice('Select the primary requested action. A mention without a request does not establish intent.', [
                 'cancel' => 'End an existing subscription',
                 'refund' => 'Return money already charged',
                 'status' => 'Learn delivery progress',
                 'change_address' => 'Modify a delivery address',
                 'other' => 'None of these actions is requested',
-            ]), $text),
+            ]), $formatter),
             ['cancel', 'refund', 'status', 'change_address', 'other'],
             "Select the primary requested action. A mention without a request does not establish intent.\n\nOptions:\n- cancel: End an existing subscription\n- refund: Return money already charged\n- status: Learn delivery progress\n- change_address: Modify a delivery address\n- other: None of these actions is requested",
         ];
 
         yield 'score' => [
-            static fn(Text $text) => new ScoreDecision(new Score('Rate incident impact using only reported facts. Use the highest fully supported level.', [
+            static fn(ValueFormatter $formatter) => new ScoreDecision(new Score('Rate incident impact using only reported facts. Use the highest fully supported level.', [
                 'No function impaired; cosmetic only',
                 'One user or a nonessential function impaired, with a workaround',
                 'Many users blocked from a core function, no data loss',
                 'Confirmed irreversible data loss or physical harm',
-            ]), $text),
+            ]), $formatter),
             ['0', '1', '2', '3'],
             "Rate incident impact using only reported facts. Use the highest fully supported level.\n\nLevels:\n0: No function impaired; cosmetic only\n1: One user or a nonessential function impaired, with a workaround\n2: Many users blocked from a core function, no data loss\n3: Confirmed irreversible data loss or physical harm",
         ];
 
         yield 'noul' => [
-            static fn(Text $text) => new NoulDecision(new Noul('Is the action permitted?', new NoulCriteria(true: 'Every condition holds', false: 'A condition is missing')), $text),
+            static fn(ValueFormatter $formatter) => new NoulDecision(new Noul('Is the action permitted?', new NoulCriteria(true: 'Every condition holds', false: 'A condition is missing')), $formatter),
             ['no', 'yes'],
             "Is the action permitted?\n\nOptions:\n- no: A condition is missing\n- yes: Every condition holds",
         ];
 
         yield 'noul without criteria' => [
-            static fn(Text $text) => new NoulDecision(new Noul('Is it urgent?'), $text),
+            static fn(ValueFormatter $formatter) => new NoulDecision(new Noul('Is it urgent?'), $formatter),
             ['no', 'yes'],
             "Is it urgent?\n\nOptions:\n- no\n- yes",
         ];
 
         yield 'structured values' => [
-            static fn(Text $text) => new ChoiceDecision(new Choice(['ask' => 'Which team?'], [
+            static fn(ValueFormatter $formatter) => new ChoiceDecision(new Choice(['ask' => 'Which team?'], [
                 'billing' => ['what' => 'Счета / charges'],
                 'technical' => null,
                 'other' => '',
                 'ключ' => 'Non-ASCII label',
                 'n/a' => null,
                 '42' => 'Numeric label',
-            ]), $text),
+            ]), $formatter),
             ['billing', 'technical', 'other', 'ключ', 'n/a', '42'],
             "{\"ask\":\"Which team?\"}\n\nOptions:\n- billing: {\"what\":\"Счета / charges\"}\n- technical\n- other\n- ключ: Non-ASCII label\n- n/a\n- 42: Numeric label",
         ];
 
         yield 'score with keys' => [
-            static fn(Text $text) => new ScoreDecision(new Score('How loud?', ['low' => 'Quiet', 'high' => 'Loud']), $text),
+            static fn(ValueFormatter $formatter) => new ScoreDecision(new Score('How loud?', ['low' => 'Quiet', 'high' => 'Loud']), $formatter),
             ['0', '1'],
             "How loud?\n\nLevels:\n0: Quiet\n1: Loud",
         ];
 
         yield 'score without instructions' => [
-            static fn(Text $text) => new ScoreDecision(new Score(null, ['Calm', ['level' => 'Angry']]), $text),
+            static fn(ValueFormatter $formatter) => new ScoreDecision(new Score(null, ['Calm', ['level' => 'Angry']]), $formatter),
             ['0', '1'],
             "\n\nLevels:\n0: Calm\n1: {\"level\":\"Angry\"}",
         ];
     }
 
-    private static function text(): Text
+    private static function formatter(): ValueFormatter
     {
-        return new Text(Serializer::withJSONOptions(JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        return new ValueFormatter(Serializer::withJSONOptions(JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     }
 
     /**
      * @dataProvider providePrompts
-     * @param Closure(Text): \TypeSafeAI\OpenAICompat\Decision $decision
+     * @param Closure(ValueFormatter): \TypeSafeAI\OpenAICompat\Decision $decision
      */
     public function testPrompt(Closure $decision, array $labels, string $expected): void
     {
-        $decision = $decision(self::text());
+        $decision = $decision(self::formatter());
 
         $this->assertSame($labels, $decision->labels());
         $this->assertSame($expected, $decision->prompt());
@@ -130,7 +130,7 @@ class DecisionTest extends TestCase
 
     public function testNoulAnswer(): void
     {
-        $decision = new NoulDecision(new Noul('Is it urgent?'), self::text());
+        $decision = new NoulDecision(new Noul('Is it urgent?'), self::formatter());
 
         $this->assertSame(
             ['type' => 'noul', 'noul' => 0.9],
@@ -140,7 +140,7 @@ class DecisionTest extends TestCase
 
     public function testChoiceAnswer(): void
     {
-        $decision = new ChoiceDecision(new Choice('Which team?', ['billing' => null, 'technical' => null]), self::text());
+        $decision = new ChoiceDecision(new Choice('Which team?', ['billing' => null, 'technical' => null]), self::formatter());
 
         $this->assertSame(
             ['type' => 'choice', 'choice' => 'technical', 'probabilities' => ['technical' => 0.7, 'billing' => 0.3], 'confidence' => 0.7],
@@ -150,7 +150,7 @@ class DecisionTest extends TestCase
 
     public function testScoreAnswer(): void
     {
-        $decision = new ScoreDecision(new Score('How frustrated?', ['Calm', 'Frustrated', 'Very angry']), self::text());
+        $decision = new ScoreDecision(new Score('How frustrated?', ['Calm', 'Frustrated', 'Very angry']), self::formatter());
 
         $this->assertSame(
             [
