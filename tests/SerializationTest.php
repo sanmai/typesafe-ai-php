@@ -19,12 +19,12 @@
 
 namespace Tests\TypeSafeAI;
 
-use TypeSafeAI\ModelsResponse;
-use TypeSafeAI\SystemOneResult;
-
 use function basename;
 use function glob;
 use function str_starts_with;
+
+use TypeSafeAI\ModelsResponse;
+use TypeSafeAI\SystemOneResult;
 
 /**
  * @coversNothing

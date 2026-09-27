@@ -22,6 +22,7 @@ namespace Tests\TypeSafeAI;
 use TypeSafeAI\DTO\ChoiceAnswer;
 use TypeSafeAI\DTO\NoulAnswer;
 use TypeSafeAI\DTO\ScoreAnswer;
+use TypeSafeAI\DTO\Usage;
 use TypeSafeAI\SystemOneResult;
 use UnexpectedValueException;
 
@@ -45,6 +46,11 @@ class SystemOneResultTest extends TestCase
         $this->assertSame(540, $this->response->usage->input_tokens);
         $this->assertSame(96, $this->response->usage->output_tokens);
         $this->assertCount(3, $this->response->answers);
+    }
+
+    public function testDefaultUsage(): void
+    {
+        $this->assertInstanceOf(Usage::class, (new SystemOneResult())->usage);
     }
 
     public function testNoul(): void

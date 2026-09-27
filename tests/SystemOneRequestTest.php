@@ -19,12 +19,12 @@
 
 namespace Tests\TypeSafeAI;
 
-use TypeSafeAI\SystemOneRequest;
+use function json_decode;
+
 use Tests\TypeSafeAI\Doubles\ExampleState;
 use TypeSafeAI\Question\Noul;
 use TypeSafeAI\Question\NoulCriteria;
-
-use function json_decode;
+use TypeSafeAI\SystemOneRequest;
 
 /**
  * @covers \TypeSafeAI\SystemOneRequest
