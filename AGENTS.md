@@ -7,7 +7,7 @@ It is designed to be type-safe and easy to use: requests are built with a fluent
 - **PHP Version:** 8.2 or newer.
 - **API reference:** https://docs.typesafe.ai (`POST /v1/systemone`, and `GET /v1/models`, which the published reference does not document).
 - **Core Architecture:**
-    - **Client:** `SystemOneHttpClient` sends requests and deserializes responses. Each provider is a subclass that defines its API root and environment variable names as `BASE_URI`, `API_KEY_ENV`, and `BASE_URL_ENV`: `TypeSafeClient` and `DrexClient`. A provider that applies a default to a request overrides `prepare()`: `TypeSafeClient` sets the model on a clone, because the TypeSafe API requires a model.
+    - **Client:** `SystemOneHttpClient` sends requests and deserializes responses. Each provider is a subclass that defines its API root and environment variable names as `BASE_URI`, `API_KEY_ENV`, and `BASE_URL_ENV`: `TypeSafeClient` and `DrexClient`. A provider that applies a default to a request overrides `systemOne()`: `TypeSafeClient` sets the model on a clone, because the TypeSafe API requires a model.
     - **Request:** `SystemOneRequest` retains the state and a map of `Question` DTOs (`Noul`, `Choice`, `Score`). The client serializes it with JMS.
     - **Response/DTOs:** `SystemOneResult` retains a map of `Answer` DTOs. JMS selects the subclass using the `type` field.
     - **Models:** `SystemOneHttpClient::models()` returns a `ModelsResponse` of `DTO\ModelCard`.

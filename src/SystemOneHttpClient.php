@@ -156,7 +156,7 @@ abstract class SystemOneHttpClient implements SystemOneClient
     public function systemOne(SystemOneRequest $request): SystemOneResult
     {
         $response = $this->client->post(self::SYSTEM_ONE, [
-            'body' => $this->serializer->serialize($this->prepare($request), 'json', RequestContext::create()),
+            'body' => $this->serializer->serialize($request, 'json', RequestContext::create()),
             'headers' => ['Content-Type' => 'application/json'],
         ]);
 
@@ -164,14 +164,6 @@ abstract class SystemOneHttpClient implements SystemOneClient
             (string) $response->getBody(),
             SystemOneResult::class,
         );
-    }
-
-    /**
-     * Returns the request to send. Override to apply provider defaults.
-     */
-    protected function prepare(SystemOneRequest $request): SystemOneRequest
-    {
-        return $request;
     }
 
     /**

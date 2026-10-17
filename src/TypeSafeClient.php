@@ -37,11 +37,11 @@ class TypeSafeClient extends SystemOneHttpClient
     /**
      * The TypeSafe API requires a model: a request without one gets MODEL_LATEST.
      */
-    protected function prepare(SystemOneRequest $request): SystemOneRequest
+    public function systemOne(SystemOneRequest $request): SystemOneResult
     {
         $request = clone $request;
         $request->model ??= self::MODEL_LATEST;
 
-        return $request;
+        return parent::systemOne($request);
     }
 }

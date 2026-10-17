@@ -35,9 +35,6 @@ use TypeSafeAI\Question\Score;
  */
 class SystemOneRequest
 {
-    /**
-     * The serializer omits the model while it is uninitialized, and the client then applies its default.
-     */
     public string $model;
 
     /**
