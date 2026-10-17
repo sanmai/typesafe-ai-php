@@ -40,6 +40,7 @@ use TypeSafeAI\TypeSafeClient;
 
 /**
  * @covers \TypeSafeAI\TypeSafeClient
+ * @covers \TypeSafeAI\SystemOneHttpClient
  * @covers \TypeSafeAI\SystemOneEvaluator
  * @covers \TypeSafeAI\RequestContext
  */
@@ -107,9 +108,11 @@ class TypeSafeClientTest extends TestCase
     {
         $client = $this->clientWith([self::success()]);
 
-        $response = $client->systemOne(self::request());
+        $original = self::request();
+        $response = $client->systemOne($original);
 
         $this->assertSame(0.92, $response->noul('is_urgent')->noul);
+        $this->assertEquals(self::request(), $original);
 
         $request = $this->getLastRequest();
 
@@ -119,14 +122,14 @@ class TypeSafeClientTest extends TestCase
         $this->assertSame('bar', $request->getHeaderLine('X-Foo'));
         $this->assertSame('application/json', $request->getHeaderLine('Content-Type'));
         $this->assertSame(
-            '{"state":"Help! My payouts have been failing for 3 days.","model":"jev-latest","questions":{"is_urgent":{"type":"noul","instructions":"Does this convey urgency?"}}}',
+            '{"model":"jev-latest","state":"Help! My payouts have been failing for 3 days.","questions":{"is_urgent":{"type":"noul","instructions":"Does this convey urgency?"}}}',
             (string) $request->getBody(),
         );
     }
 
     public static function provideEvaluatedModels(): iterable
     {
-        yield 'default model' => [[], SystemOneRequest::MODEL_LATEST];
+        yield 'default model' => [[], null];
 
         yield 'explicit model' => [['model' => 'jev-preview'], 'jev-preview'];
     }
@@ -135,7 +138,7 @@ class TypeSafeClientTest extends TestCase
      * @dataProvider provideEvaluatedModels
      * @param array<string, string> $arguments
      */
-    public function testEvaluate(array $arguments, string $expectedModel): void
+    public function testEvaluate(array $arguments, ?string $expectedModel): void
     {
         $state = ['message' => 'Help! My payouts have been failing for 3 days.'];
         $response = $this->deserializeFile(__DIR__ . '/data/evaluation_mixed.json', SystemOneResult::class);

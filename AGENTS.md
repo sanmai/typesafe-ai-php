@@ -7,11 +7,11 @@ It is designed to be type-safe and easy to use: requests are built with a fluent
 - **PHP Version:** 8.2 or newer.
 - **API reference:** https://docs.typesafe.ai (`POST /v1/systemone`, and `GET /v1/models`, which the published reference does not document).
 - **Core Architecture:**
-    - **Client:** `TypeSafeClient` sends requests and deserializes responses.
+    - **Client:** `SystemOneHttpClient` sends requests and deserializes responses. Each provider is a subclass that defines its API root and environment variable names as `BASE_URI`, `API_KEY_ENV`, and `BASE_URL_ENV`: `TypeSafeClient` and `DrexClient`. A provider that applies a default to a request overrides `prepare()`: `TypeSafeClient` sets the model on a clone, because the TypeSafe API requires a model.
     - **Request:** `SystemOneRequest` retains the state and a map of `Question` DTOs (`Noul`, `Choice`, `Score`). The client serializes it with JMS.
     - **Response/DTOs:** `SystemOneResult` retains a map of `Answer` DTOs. JMS selects the subclass using the `type` field.
-    - **Models:** `TypeSafeClient::models()` returns a `ModelsResponse` of `DTO\ModelCard`.
-    - **Attributes:** `Noul`, `Choice`, and `Score` are PHP attributes too, so a result class can declare its own questions. `TypeSafeClient::evaluate()` is the only entry point. It builds a single `AttributeReader` for the class, sends the questions that the reader parses from the constructor, and then hydrates the class with `hydrate()`. The request and the result know nothing about attributes: keep the attribute logic in the reader and its one caller.
+    - **Models:** `SystemOneHttpClient::models()` returns a `ModelsResponse` of `DTO\ModelCard`.
+    - **Attributes:** `Noul`, `Choice`, and `Score` are PHP attributes too, so a result class can declare its own questions. `SystemOneEvaluator::evaluate()` is the only entry point. It builds a single `AttributeReader` for the class, sends the questions that the reader parses from the constructor, and then hydrates the class with `hydrate()`. The request and the result know nothing about attributes: keep the attribute logic in the reader and its one caller.
 
 End-user documentation:
 
@@ -20,7 +20,7 @@ End-user documentation:
 ## Project Navigation
 
 **Key locations:**
-- **Core Logic:** @src/TypeSafeClient.php (the main entry point for all API calls).
+- **Core Logic:** @src/SystemOneHttpClient.php (the main entry point for all API calls), with providers in `src/TypeSafeClient.php` and `src/DrexClient.php`.
 - **Request:** `src/SystemOneRequest.php` and `src/Question/`.
 - **Data Models:** `src/SystemOneResult.php`, `src/ModelsResponse.php`, and `src/DTO/` (all response objects).
 - **Tests:** `tests/`, with response fixtures in `tests/data/`.
@@ -46,7 +46,8 @@ End-user documentation:
 - **JMS attributes**: Use PHP attributes such as `#[Type(...)]` for JMS serializer metadata. Keep PHPDoc like `@var` where it provides static-analysis detail.
 - **Serializer property names**: The JSON serializer uses JMS' `IdenticalPropertyNamingStrategy`, so DTO property names must match API field names unless a `#[SerializedName(...)]` override is added.
 - **Retries**: `408`, `429`, and every `5xx` response, plus connection timeouts, are retried twice by `GuzzleRetryMiddleware`. Other HTTP errors throw Guzzle exceptions.
-- **Environment**: `createInstance()` defaults to `TYPESAFE_API_KEY` and `TYPESAFE_BASE_URL`, the names the other SDKs use. There is no default-model variable: the model is a property of the request.
+- **Environment**: `createInstance()` reads the environment variables of the provider: `TYPESAFE_API_KEY` and `TYPESAFE_BASE_URL` (the names the other SDKs use), or `DREX_API_KEY` and `DREX_BASE_URL`. There is no default-model variable: the model is a property of the request.
+- **Model**: `SystemOneRequest::$model` stays uninitialized when no model is given. JMS skips uninitialized properties also with `serializeNull`, so the request omits the model, and the provider applies its default. Do not make it nullable: both APIs reject `"model": null`.
 
 ## Development Workflow
 
