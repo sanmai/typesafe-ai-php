@@ -40,6 +40,7 @@ use TypeSafeAI\TypeSafeClient;
 
 /**
  * @covers \TypeSafeAI\TypeSafeClient
+ * @covers \TypeSafeAI\SystemOneHttpClient
  * @covers \TypeSafeAI\SystemOneEvaluator
  * @covers \TypeSafeAI\RequestContext
  */
