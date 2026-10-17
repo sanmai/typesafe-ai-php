@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 use TypeSafeAI\DrexClient;
 use TypeSafeAI\DTO\ChoiceAnswer;
+use TypeSafeAI\OpenAICompatClient;
 use TypeSafeAI\Question\Choice;
 use TypeSafeAI\SystemOneClient;
 use TypeSafeAI\TypeSafeClient;
@@ -48,6 +49,7 @@ class StrawberryRs
 $clients = [
     'Jev' => TypeSafeClient::createInstance(),
     'Drex' => DrexClient::createInstance(),
+    'llama' => OpenAICompatClient::createInstance(),
 ];
 
 foreach ($clients as $name => $client) {

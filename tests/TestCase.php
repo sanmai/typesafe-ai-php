@@ -110,12 +110,15 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         return $this->serializer->deserialize(file_get_contents($file), $type, 'json');
     }
 
-    protected function getPropertyValue(SystemOneHttpClient $client, string $propertyName)
+    /**
+     * @param class-string $class The class that declares the property
+     */
+    protected function getPropertyValue(object $object, string $propertyName, string $class = SystemOneHttpClient::class)
     {
-        $property = new ReflectionProperty(SystemOneHttpClient::class, $propertyName);
+        $property = new ReflectionProperty($class, $propertyName);
         $property->setAccessible(true);
 
-        return $property->getValue($client);
+        return $property->getValue($object);
     }
 
     /**

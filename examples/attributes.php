@@ -22,10 +22,12 @@ declare(strict_types=1);
 // A result class that declares its own questions, populated with a typed result for each one.
 //
 // Run: TYPESAFE_API_KEY=your-api-key php examples/attributes.php
+// Or: OPENAI_BASE_URL=http://127.0.0.1:8080/v1 php examples/attributes.php
 
 use TypeSafeAI\DTO\ChoiceAnswer;
 use TypeSafeAI\DTO\NoulAnswer;
 use TypeSafeAI\DTO\ScoreAnswer;
+use TypeSafeAI\OpenAICompatClient;
 use TypeSafeAI\Question\Choice;
 use TypeSafeAI\Question\Noul;
 use TypeSafeAI\Question\NoulCriteria;
@@ -51,6 +53,7 @@ class TicketDecision
 }
 
 $client = match ((bool) getenv('OPENAI_BASE_URL')) {
+    true => OpenAICompatClient::createInstance(),
     default => TypeSafeClient::createInstance(),
 };
 

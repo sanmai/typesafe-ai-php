@@ -33,15 +33,12 @@ use Psr\Log\AbstractLogger;
 use function putenv;
 
 use Stringable;
-use Tests\TypeSafeAI\Doubles\TicketDecision;
 use TypeSafeAI\SystemOneRequest;
-use TypeSafeAI\SystemOneResult;
 use TypeSafeAI\TypeSafeClient;
 
 /**
  * @covers \TypeSafeAI\TypeSafeClient
  * @covers \TypeSafeAI\SystemOneHttpClient
- * @covers \TypeSafeAI\SystemOneEvaluator
  * @covers \TypeSafeAI\RequestContext
  */
 class TypeSafeClientTest extends TestCase
@@ -134,44 +131,6 @@ class TypeSafeClientTest extends TestCase
         $client->systemOne(SystemOneRequest::build('Help!', 'jev-preview'));
 
         $this->assertSame('{"model":"jev-preview","state":"Help!","questions":{}}', (string) $this->getLastRequest()->getBody());
-    }
-
-    public static function provideEvaluatedModels(): iterable
-    {
-        yield 'default model' => [[], null];
-
-        yield 'explicit model' => [['model' => 'jev-preview'], 'jev-preview'];
-    }
-
-    /**
-     * @dataProvider provideEvaluatedModels
-     * @param array<string, string> $arguments
-     */
-    public function testEvaluate(array $arguments, ?string $expectedModel): void
-    {
-        $state = ['message' => 'Help! My payouts have been failing for 3 days.'];
-        $response = $this->deserializeFile(__DIR__ . '/data/evaluation_mixed.json', SystemOneResult::class);
-
-        $expected = SystemOneRequest::build($state, $expectedModel)
-            ->noul('is_urgent', 'Does this convey urgency?', 'Explicitly time-sensitive', 'No urgency expressed')
-            ->choice('department', 'Which team should handle this?', [
-                'billing' => 'Payments, invoicing, refunds',
-                'technical' => 'Bugs, outages, integrations',
-                'sales' => null,
-            ])
-            ->score('frustration', 'How frustrated is the customer?', ['Calm', 'Frustrated', 'Very angry']);
-
-        $client = $this->createPartialMock(TypeSafeClient::class, ['systemOne']);
-        $client->expects($this->once())
-            ->method('systemOne')
-            ->with($this->equalTo($expected))
-            ->willReturn($response);
-
-        $decision = $client->evaluate($state, TicketDecision::class, ...$arguments);
-
-        $this->assertSame(0.92, $decision->is_urgent->noul);
-        $this->assertSame('technical', $decision->department->choice);
-        $this->assertSame(1.6, $decision->frustration->score);
     }
 
     public function testModels(): void

@@ -37,7 +37,7 @@ class ScoreAnswer extends Answer
     /**
      * Each level index mapped to its description, as they were sent.
      *
-     * @var array<int, string|array<mixed>>
+     * @var array<int, string|array<mixed>|object>
      */
     #[Type('array')]
     public array $legend;
