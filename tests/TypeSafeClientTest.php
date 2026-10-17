@@ -127,6 +127,15 @@ class TypeSafeClientTest extends TestCase
         );
     }
 
+    public function testSystemOneWithModel(): void
+    {
+        $client = $this->clientWith([self::success()]);
+
+        $client->systemOne(SystemOneRequest::build('Help!', 'jev-preview'));
+
+        $this->assertSame('{"model":"jev-preview","state":"Help!","questions":{}}', (string) $this->getLastRequest()->getBody());
+    }
+
     public static function provideEvaluatedModels(): iterable
     {
         yield 'default model' => [[], null];

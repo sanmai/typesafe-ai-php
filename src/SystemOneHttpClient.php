@@ -42,8 +42,6 @@ use function sprintf;
 
 /**
  * This class implements the System One HTTP API. A subclass defines the provider: BASE_URI, API_KEY_ENV, and BASE_URL_ENV.
- *
- * @phpstan-consistent-constructor
  */
 abstract class SystemOneHttpClient implements SystemOneClient
 {
@@ -131,7 +129,7 @@ abstract class SystemOneHttpClient implements SystemOneClient
         );
     }
 
-    public function __construct(
+    final public function __construct(
         private readonly Client $client,
         private readonly HandlerStack $stack,
         private readonly SerializerInterface&JsonDeserializer $serializer,
