@@ -90,7 +90,7 @@ class TypeSafeClient implements SystemOneClient
         array $extraHeaders = [],
         array $retryOptions = [],
         array $clientOptions = [],
-    ): self {
+    ): static {
         $apiKey ??= getenv(self::API_KEY_ENV) ?: throw new InvalidArgumentException(
             sprintf('No API key given and %s is not set.', self::API_KEY_ENV),
         );
@@ -119,7 +119,7 @@ class TypeSafeClient implements SystemOneClient
             'handler' => $stack,
         ], $clientOptions));
 
-        return new self(
+        return new static(
             $httpClient,
             $stack,
             Serializer::withJSONOptions(),
