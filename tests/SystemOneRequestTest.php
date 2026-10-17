@@ -54,6 +54,21 @@ class SystemOneRequestTest extends TestCase
             }',
         ];
 
+        yield 'explicit model' => [
+            fn() => SystemOneRequest::build(self::STATE, 'jev-preview')
+                ->noul('is_urgent', 'Does this convey urgency?'),
+            '{
+              "state": "Help! My payouts have been failing for 3 days.",
+              "model": "jev-preview",
+              "questions": {
+                "is_urgent": {
+                  "type": "noul",
+                  "instructions": "Does this convey urgency?"
+                }
+              }
+            }',
+        ];
+
         yield 'noul with criteria' => [
             fn() => SystemOneRequest::build(self::STATE)
                 ->noul('is_urgent', 'Does this convey urgency?', true: 'Explicitly time-sensitive', false: 'No urgency expressed'),
