@@ -38,7 +38,7 @@ trait SystemOneEvaluator
      * @param class-string<TResult> $class
      * @return TResult
      */
-    public function evaluate(string|array|object $state, string $class, string $model = SystemOneRequest::MODEL_LATEST): object
+    public function evaluate(string|array|object $state, string $class, ?string $model = null): object
     {
         $reader = new AttributeReader(new ReflectionClass($class));
         $request = new SystemOneRequest($state, $model, [...$reader->questions()]);

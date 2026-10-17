@@ -169,7 +169,7 @@ class OpenAICompatClient implements SystemOneClient
     private function complete(SystemOneRequest $request, array $decisions): Completion
     {
         $response = $this->client->post(self::CHAT_COMPLETIONS, [
-            'json' => $this->body($request->model, SystemPrompt::of($decisions), $this->formatter->format($request->state), Schema::of($decisions)),
+            'json' => $this->body($request->model ?? null, SystemPrompt::of($decisions), $this->formatter->format($request->state), Schema::of($decisions)),
         ]);
 
         return $this->serializer->deserializeJson((string) $response->getBody(), Completion::class);
@@ -179,7 +179,7 @@ class OpenAICompatClient implements SystemOneClient
      * @param array<string, mixed> $schema
      * @return array<string, mixed>
      */
-    private function body(string $model, string $system, string $user, array $schema): array
+    private function body(?string $model, string $system, string $user, array $schema): array
     {
         return array_filter(array_merge([
             'model' => $model,

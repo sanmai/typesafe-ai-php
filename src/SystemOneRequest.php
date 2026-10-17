@@ -35,7 +35,7 @@ use TypeSafeAI\Question\Score;
  */
 class SystemOneRequest
 {
-    public const MODEL_LATEST = 'jev-latest';
+    public string $model;
 
     /**
      * @param ValueType $state Text, or structured data such as a chat log.
@@ -43,17 +43,23 @@ class SystemOneRequest
      */
     public function __construct(
         public string|array|object $state,
-        public string $model = self::MODEL_LATEST,
+        ?string $model = null,
         #[Type('array<string, TypeSafeAI\Question\Question>')]
         public array $questions = [],
-    ) {}
+    ) {
+        if (null === $model) {
+            return;
+        }
+
+        $this->model = $model;
+    }
 
     /**
      * Same as the constructor, for method chaining convenience.
      *
      * @param ValueType $state
      */
-    public static function build(string|array|object $state, string $model = self::MODEL_LATEST): self
+    public static function build(string|array|object $state, ?string $model = null): self
     {
         return new self($state, $model);
     }

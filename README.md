@@ -36,6 +36,18 @@ The API key is optional: without one the client reads `TYPESAFE_API_KEY`, and th
 $client = TypeSafeClient::createInstance();
 ```
 
+### Other Providers
+
+`DrexClient` sends the same requests to [Nace.AI Drex](https://console.nace.ai/docs). It reads `DREX_API_KEY` and `DREX_BASE_URL`.
+
+```php
+use TypeSafeAI\DrexClient;
+
+$client = DrexClient::createInstance();
+```
+
+A provider that implements the same API needs a subclass of `SystemOneHttpClient` that defines `BASE_URI`, `API_KEY_ENV`, and `BASE_URL_ENV`.
+
 ### Using Result Classes
 
 Annotate any class with attributes, add `Answer` subclasses as parameter types, fire up `evaluate()` that will send the question, and return an instance of the class with all parameters assigned their respective answers. This is the recommended way to use the SDK.
@@ -137,7 +149,7 @@ $request = new SystemOneRequest($state, questions: [
 ]);
 ```
 
-Requests use the `jev-latest` model by default; to use a different model, provide it as the second argument to `build()` or the constructor.
+To select a model, provide it as the second argument to `build()` or the constructor. Without a model, `TypeSafeClient` sends `jev-latest`, and `DrexClient` sends no model, so Drex selects its latest model.
 
 ### Reading Answers
 
@@ -215,7 +227,7 @@ There are differences from the TypeSafe API:
 - The questions are in the system message, and the state is the user message. For the same questions, the prompt prefix does not change, so the server can reuse its prompt cache.
 - A JSON schema sets the shape of the response: a probability for each option of each question. The client uses the probabilities unchanged, as it does with the TypeSafe API.
 - A yes/no question has the options `no` and `yes`, and a score has the level indices as options. A tie selects the first option in the response.
-- The request model is sent unchanged. llama.cpp ignores it; for other servers, specify it as for the TypeSafe API.
+- The request model is sent unchanged, and a request without a model sends no model. llama.cpp ignores it; for other servers, specify it as for the TypeSafe API.
 - The request does not set a temperature or a token limit, so the server defaults apply. A response that stops at the token limit is not valid JSON, and the client throws a JMS `RuntimeException`.
 
 `createInstance()` takes an optional endpoint and API key, then `$requestOptions` to change the request body. A null value removes a field. For example, to set a token limit, and to remove `model` for a server that rejects it:

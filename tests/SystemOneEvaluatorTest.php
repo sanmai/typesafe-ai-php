@@ -33,7 +33,7 @@ class SystemOneEvaluatorTest extends TestCase
 {
     public static function provideEvaluatedModels(): iterable
     {
-        yield 'default model' => [[], SystemOneRequest::MODEL_LATEST];
+        yield 'default model' => [[], null];
 
         yield 'explicit model' => [['model' => 'jev-preview'], 'jev-preview'];
     }
@@ -42,7 +42,7 @@ class SystemOneEvaluatorTest extends TestCase
      * @dataProvider provideEvaluatedModels
      * @param array<string, string> $arguments
      */
-    public function testEvaluate(array $arguments, string $expectedModel): void
+    public function testEvaluate(array $arguments, ?string $expectedModel): void
     {
         $state = ['message' => 'Help! My payouts have been failing for 3 days.'];
         $response = $this->deserializeFile(__DIR__ . '/data/evaluation_mixed.json', SystemOneResult::class);

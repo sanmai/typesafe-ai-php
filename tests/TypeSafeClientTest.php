@@ -38,6 +38,8 @@ use TypeSafeAI\TypeSafeClient;
 
 /**
  * @covers \TypeSafeAI\TypeSafeClient
+ * @covers \TypeSafeAI\SystemOneHttpClient
+ * @covers \TypeSafeAI\RequestContext
  */
 class TypeSafeClientTest extends TestCase
 {
@@ -103,9 +105,11 @@ class TypeSafeClientTest extends TestCase
     {
         $client = $this->clientWith([self::success()]);
 
-        $response = $client->systemOne(self::request());
+        $original = self::request();
+        $response = $client->systemOne($original);
 
         $this->assertSame(0.92, $response->noul('is_urgent')->noul);
+        $this->assertEquals(self::request(), $original);
 
         $request = $this->getLastRequest();
 
@@ -115,9 +119,18 @@ class TypeSafeClientTest extends TestCase
         $this->assertSame('bar', $request->getHeaderLine('X-Foo'));
         $this->assertSame('application/json', $request->getHeaderLine('Content-Type'));
         $this->assertSame(
-            '{"state":"Help! My payouts have been failing for 3 days.","model":"jev-latest","questions":{"is_urgent":{"type":"noul","instructions":"Does this convey urgency?"}}}',
+            '{"model":"jev-latest","state":"Help! My payouts have been failing for 3 days.","questions":{"is_urgent":{"type":"noul","instructions":"Does this convey urgency?"}}}',
             (string) $request->getBody(),
         );
+    }
+
+    public function testSystemOneWithModel(): void
+    {
+        $client = $this->clientWith([self::success()]);
+
+        $client->systemOne(SystemOneRequest::build('Help!', 'jev-preview'));
+
+        $this->assertSame('{"model":"jev-preview","state":"Help!","questions":{}}', (string) $this->getLastRequest()->getBody());
     }
 
     public function testModels(): void

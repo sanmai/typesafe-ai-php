@@ -119,7 +119,7 @@ class OpenAICompatClientTest extends TestCase
 
         try {
             /** @var Client $httpClient */
-            $httpClient = $this->getPropertyValue(OpenAICompatClient::createInstance(...$arguments), 'client');
+            $httpClient = $this->getPropertyValue(OpenAICompatClient::createInstance(...$arguments), 'client', OpenAICompatClient::class);
         } finally {
             putenv('OPENAI_BASE_URL');
             putenv('OPENAI_API_KEY');
@@ -231,6 +231,15 @@ class OpenAICompatClientTest extends TestCase
         $this->assertArrayNotHasKey('model', $body);
         $this->assertSame(['enable_thinking' => true], $body['chat_template_kwargs']);
         $this->assertSame('json_schema', $body['response_format']['type']);
+    }
+
+    public function testWithoutModel(): void
+    {
+        $client = $this->client([self::completion(['is_urgent' => ['no' => 0.5, 'yes' => 0.5]])]);
+
+        $client->systemOne(SystemOneRequest::build('Plain text')->noul('is_urgent', 'Urgent?'));
+
+        $this->assertArrayNotHasKey('model', $this->requestBody(0));
     }
 
     public function testEvaluate(): void

@@ -46,11 +46,12 @@ use JSONSerializer\Contracts\JsonDeserializer;
 
 use function ksort;
 
-use ReflectionObject;
+use ReflectionProperty;
 
 use function sprintf;
 use function str_replace;
 
+use TypeSafeAI\SystemOneHttpClient;
 use TypeSafeAI\TypeSafeClient;
 
 abstract class TestCase extends \PHPUnit\Framework\TestCase
@@ -109,17 +110,25 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         return $this->serializer->deserialize(file_get_contents($file), $type, 'json');
     }
 
-    protected function getPropertyValue(object $object, string $propertyName)
+    /**
+     * @param class-string $class The class that declares the property
+     */
+    protected function getPropertyValue(object $object, string $propertyName, string $class = SystemOneHttpClient::class)
     {
-        $property = (new ReflectionObject($object))->getProperty($propertyName);
+        $property = new ReflectionProperty($class, $propertyName);
         $property->setAccessible(true);
 
         return $property->getValue($object);
     }
 
-    protected function clientWith(array $responses, array $clientOptions = []): TypeSafeClient
+    /**
+     * @template T of SystemOneHttpClient
+     * @param class-string<T> $class
+     * @return T
+     */
+    protected function clientWith(array $responses, array $clientOptions = [], string $class = TypeSafeClient::class): SystemOneHttpClient
     {
-        $client = TypeSafeClient::createInstance(
+        $client = $class::createInstance(
             'secret',
             ['X-Foo' => 'bar'],
             ['default_retry_multiplier' => 0],
