@@ -21,9 +21,27 @@ declare(strict_types=1);
 
 namespace TypeSafeAI;
 
-use GuzzleHttp\Client;
-
 /**
  * TypeSafe AI API Client.
  */
-class TypeSafeClient extends SystemOneHttpClient {}
+class TypeSafeClient extends SystemOneHttpClient
+{
+    public const BASE_URI = 'https://api.typesafe.ai';
+
+    public const API_KEY_ENV = 'TYPESAFE_API_KEY';
+
+    public const BASE_URL_ENV = 'TYPESAFE_BASE_URL';
+
+    public const MODEL_LATEST = 'jev-latest';
+
+    /**
+     * The TypeSafe API requires a model, so we use MODEL_LATEST for requests without it.
+     */
+    public function systemOne(SystemOneRequest $request): SystemOneResult
+    {
+        $request = clone $request;
+        $request->model ??= self::MODEL_LATEST;
+
+        return parent::systemOne($request);
+    }
+}

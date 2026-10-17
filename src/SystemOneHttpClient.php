@@ -40,15 +40,21 @@ use Psr\Log\LoggerInterface;
 use function range;
 use function sprintf;
 
-class SystemOneHttpClient implements SystemOneClient
+/**
+ * This class implements the System One HTTP API. A subclass defines the provider: BASE_URI, API_KEY_ENV, and BASE_URL_ENV.
+ */
+abstract class SystemOneHttpClient implements SystemOneClient
 {
     use SystemOneEvaluator;
 
-    public const BASE_URI = 'https://api.typesafe.ai';
+    /** @var string */
+    public const BASE_URI = '';
 
-    public const API_KEY_ENV = 'TYPESAFE_API_KEY';
+    /** @var string */
+    public const API_KEY_ENV = '';
 
-    public const BASE_URL_ENV = 'TYPESAFE_BASE_URL';
+    /** @var string */
+    public const BASE_URL_ENV = '';
 
     private const SYSTEM_ONE = '/v1/systemone';
 
@@ -76,11 +82,11 @@ class SystemOneHttpClient implements SystemOneClient
     /**
      * Build a new client instance.
      *
-     * @param string|null $apiKey TypeSafe API key; read from TYPESAFE_API_KEY when null
+     * @param string|null $apiKey API key; read from the API_KEY_ENV variable when null
      * @param array<string, string> $extraHeaders Additional HTTP headers to send with every request
      * @param array<string, mixed> $retryOptions Options passed to GuzzleRetryMiddleware (retry_on_status, etc.)
      * @param array<string, mixed> $clientOptions Extra Guzzle client options (base_uri, timeout, etc.) merged after defaults
-     * @throws InvalidArgumentException When no API key is given and TYPESAFE_API_KEY is not set
+     * @throws InvalidArgumentException When no API key is given and the API_KEY_ENV variable is not set
      */
     public static function createInstance(
         ?string $apiKey = null,
@@ -88,8 +94,8 @@ class SystemOneHttpClient implements SystemOneClient
         array $retryOptions = [],
         array $clientOptions = [],
     ): static {
-        $apiKey ??= getenv(self::API_KEY_ENV) ?: throw new InvalidArgumentException(
-            sprintf('No API key given and %s is not set.', self::API_KEY_ENV),
+        $apiKey ??= getenv(static::API_KEY_ENV) ?: throw new InvalidArgumentException(
+            sprintf('No API key given and %s is not set.', static::API_KEY_ENV),
         );
 
         $stack = HandlerStack::create();
@@ -105,7 +111,7 @@ class SystemOneHttpClient implements SystemOneClient
         ], $retryOptions)), 'retry_on_status');
 
         $httpClient = new Client(array_merge([
-            'base_uri' => getenv(self::BASE_URL_ENV) ?: self::BASE_URI,
+            'base_uri' => getenv(static::BASE_URL_ENV) ?: static::BASE_URI,
             'connect_timeout' => self::CONNECT_TIMEOUT,
             'timeout' => self::TIMEOUT,
             'http_errors' => true,
@@ -124,9 +130,9 @@ class SystemOneHttpClient implements SystemOneClient
     }
 
     final public function __construct(
-        protected readonly Client $client,
-        protected readonly HandlerStack $stack,
-        protected readonly SerializerInterface&JsonDeserializer $serializer,
+        private readonly Client $client,
+        private readonly HandlerStack $stack,
+        private readonly SerializerInterface&JsonDeserializer $serializer,
     ) {}
 
     public function setLogger(LoggerInterface $logger, string $template = self::LOG_TEMPLATE): self
@@ -172,5 +178,4 @@ class SystemOneHttpClient implements SystemOneClient
             ModelsResponse::class,
         );
     }
-
 }

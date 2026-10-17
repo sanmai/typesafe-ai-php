@@ -36,6 +36,18 @@ The API key is optional: without one the client reads `TYPESAFE_API_KEY`, and th
 $client = TypeSafeClient::createInstance();
 ```
 
+### Other Providers
+
+`DrexClient` sends the same requests to [Nace.AI Drex](https://console.nace.ai/docs). It reads `DREX_API_KEY` and `DREX_BASE_URL`.
+
+```php
+use TypeSafeAI\DrexClient;
+
+$client = DrexClient::createInstance();
+```
+
+A provider that implements the same API needs a subclass of `SystemOneHttpClient` that defines `BASE_URI`, `API_KEY_ENV`, and `BASE_URL_ENV`.
+
 ### Using Result Classes
 
 Annotate any class with attributes, add `Answer` subclasses as parameter types, fire up `evaluate()` that will send the question, and return an instance of the class with all parameters assigned their respective answers. This is the recommended way to use the SDK.
@@ -137,7 +149,7 @@ $request = new SystemOneRequest($state, questions: [
 ]);
 ```
 
-Requests use the `jev-latest` model by default; to use a different model, provide it as the second argument to `build()` or the constructor.
+To select a model, provide it as the second argument to `build()` or the constructor. Without a model, `TypeSafeClient` sends `jev-latest`, and `DrexClient` sends no model, so Drex selects its latest model.
 
 ### Reading Answers
 
