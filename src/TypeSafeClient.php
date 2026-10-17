@@ -35,7 +35,7 @@ class TypeSafeClient extends SystemOneHttpClient
     public const MODEL_LATEST = 'jev-latest';
 
     /**
-     * The TypeSafe API requires a model: a request without one gets MODEL_LATEST.
+     * The TypeSafe API requires a model, so we use MODEL_LATEST for requests without it.
      */
     public function systemOne(SystemOneRequest $request): SystemOneResult
     {
