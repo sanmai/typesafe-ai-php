@@ -123,7 +123,7 @@ class SystemOneHttpClient implements SystemOneClient
         );
     }
 
-    public function __construct(
+    final public function __construct(
         protected readonly Client $client,
         protected readonly HandlerStack $stack,
         protected readonly SerializerInterface&JsonDeserializer $serializer,
